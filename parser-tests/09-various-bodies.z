@@ -1,0 +1,45 @@
+contains_only_do: {
+    do: {}
+}
+
+contains_only_task_line: {
+    - Some task
+}
+
+contains_all_sections: {
+    do: {}
+    pre: {}
+    post: {}
+}
+
+contains_all_sections_with_task_lines: {
+    pre: {
+        - pre task line
+    }
+    post: {
+        - post task line
+    }
+    do: {
+        - do task line
+    }
+}
+
+contains_all_sections_with_one_task_line: {
+    pre:    - pre task line
+    post:   - post task line
+    do:     - do task line
+}
+
+contains_all_sections_with_task_lines_and_preconditions: {
+    pre: {
+        - pre task line
+    }
+    post: {
+        - post task line
+    }
+    do: {
+        - do task line
+    }
+
+
+}

@@ -1,0 +1,13 @@
+c: "String"
+
+
+a(a = c) {
+    pre {
+    }
+
+    post {
+    }
+
+    do {
+    }
+}
