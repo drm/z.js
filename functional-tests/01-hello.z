@@ -1,0 +1,6 @@
+hello(
+    who = "world",
+    what = 'Hello'
+) {
+    - echo "$(what) $(who)"
+}

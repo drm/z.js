@@ -19,6 +19,8 @@ declaration =
     args:arguments?
     optional_declaration_operator
     body:body? _ {
+        console.log(body);
+return;
         return new z.Declaration(name, args || [], body);
     }
 
@@ -41,7 +43,7 @@ task_section
     = _ name:section_name optional_declaration_operator body:task_section_body _       { return new z.TaskSection(name, body); }
 
 precondition
-    = precondition_name _ optional_declaration_operator expr _
+    = name:precondition_name _ optional_declaration_operator expr:expr _      { return new z.TaskPrecondition(name, expr); }
 
 section_name
     = $ 'do'

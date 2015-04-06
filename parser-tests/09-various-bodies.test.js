@@ -14,6 +14,21 @@ var expectedSpecs = {
         {name: 'pre', lines: [new z.TaskLine('pre task line')]},
         {name: 'post', lines: [new z.TaskLine('post task line')]},
         {name: 'do', lines: [new z.TaskLine('do task line')]}
+    ],
+    contains_all_sections_with_task_lines_and_preconditions_random_order: [
+        {name: 'do', lines: []},
+        {name: 'if', expr: true},
+        {name: 'pre', lines: []},
+        {name: 'post', lines: []},
+        {name: 'unless', expr: true},
+        {name: 'assert', expr: true}
+    ],
+    contains_section_multiple_times: [
+        {name: 'do', lines: []},
+        {name: 'do', lines: []},
+        {name: 'do', lines: []},
+        {name: 'do', lines: []},
+        {name: 'do', lines: []}
     ]
 };
 

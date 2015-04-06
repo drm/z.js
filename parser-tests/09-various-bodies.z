@@ -40,6 +40,31 @@ contains_all_sections_with_task_lines_and_preconditions: {
     do: {
         - do task line
     }
+    unless: true
+    if: true
+    assert: true
+}
 
+contains_all_sections_with_task_lines_and_preconditions_random_order: {
+    do: {}
+    if: true
+    pre: {}
+    post: {}
+    unless: true
+    assert: true
+}
 
+operator_omitted {
+    pre {}
+    unless true
+    post {}
+    do {}
+}
+
+contains_section_multiple_times {
+    do {}
+    do {}
+    do {}
+    do {}
+    do {}
 }
