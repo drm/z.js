@@ -10,12 +10,15 @@ start
 spec
     = declaration
     / definition
+    / comment
+
+comment = _ '/' '/' [^\n]+ "\n" _
 
 declaration =
     name:identifier
-    _ '=>' _
-    args:arguments?
-    body:body _ {
+    _ '=>'
+    _ args:arguments?
+    _ body:body _ {
         return new z.Declaration(name, args || [], body);
     }
 

@@ -1,6 +1,6 @@
 c = "String"
 
-a(a = c): {
+a => (a = c) {
     pre: {
     }
 

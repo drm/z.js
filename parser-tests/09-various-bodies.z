@@ -1,18 +1,18 @@
-contains_only_do: {
+contains_only_do => {
     do: {}
 }
 
-contains_only_task_line: {
+contains_only_task_line => {
     - Some task
 }
 
-contains_all_sections: {
+contains_all_sections => {
     do: {}
     pre: {}
     post: {}
 }
 
-contains_all_sections_with_task_lines: {
+contains_all_sections_with_task_lines => {
     pre: {
         - pre task line
     }
@@ -24,13 +24,13 @@ contains_all_sections_with_task_lines: {
     }
 }
 
-contains_all_sections_with_one_task_line: {
+contains_all_sections_with_one_task_line => {
     pre:    - pre task line
     post:   - post task line
     do:     - do task line
 }
 
-contains_all_sections_with_task_lines_and_preconditions: {
+contains_all_sections_with_task_lines_and_preconditions => {
     pre: {
         - pre task line
     }
@@ -45,7 +45,7 @@ contains_all_sections_with_task_lines_and_preconditions: {
     assert: true
 }
 
-contains_all_sections_with_task_lines_and_preconditions_random_order: {
+contains_all_sections_with_task_lines_and_preconditions_random_order => {
     do: {}
     if: true
     pre: {}
@@ -55,7 +55,7 @@ contains_all_sections_with_task_lines_and_preconditions_random_order: {
 }
 
 
-contains_section_multiple_times: {
+contains_section_multiple_times => {
     do: {}
     do: {}
     do: {}

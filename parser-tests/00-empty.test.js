@@ -1,4 +1,4 @@
 /* global:assert */
 
-assert.deepEqual(result, new z.Container());
+assert.deepEqual(result, new z.Container([]));
 

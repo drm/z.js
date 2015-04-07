@@ -8,7 +8,14 @@ module.exports = (function() {
 
     Definition.prototype = {
         resolve: function(context) {
-            return this.expr.resolve(context);
+            if (typeof this.expr === 'object') {
+                return this.expr.resolve(context);
+            }
+            return this.expr;
+        },
+
+        normalize: function() {
+            return this;
         }
     };
 
@@ -39,7 +46,7 @@ module.exports = (function() {
         normalize: function() {
             if (!this.body) {
                 this.body = new Noop();
-            } else if (typeof this.body !== 'string') {
+            } else if (typeof this.expr === 'object') {
                 this.body.normalize();
             }
             return this;
@@ -75,6 +82,10 @@ module.exports = (function() {
             if (!context.exists(this.name)) {
                 context.set(this.name, context.evaluate(this.default_value));
             }
+        },
+
+        normalize: function() {
+            return this;
         }
     }
 
@@ -147,8 +158,12 @@ module.exports = (function() {
 
         normalize: function() {
             var ctx = this.context;
-            this.root.forEach(function(d) {
-                d.normalize();
+            this.root.filter(function(d) {
+                return d instanceof Definition || d instanceof Declaration;
+            }).forEach(function(d) {
+                if (typeof d === 'object') {
+                    d.normalize();
+                }
                 ctx.set(d.name, d);
             });
 

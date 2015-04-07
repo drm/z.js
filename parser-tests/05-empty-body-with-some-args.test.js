@@ -8,6 +8,6 @@ assert.deepEqual(
             new z.Arg("e", null)
         ],
         new z.Task()
-    ),
+    ).normalize(),
     result.get('a')
 );

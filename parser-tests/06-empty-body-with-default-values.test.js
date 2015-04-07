@@ -5,6 +5,6 @@ assert.deepEqual(
             new z.Arg("b", "def"),
         ],
         new z.Task()
-    ),
+    ).normalize(),
     result.get('a')
 );
