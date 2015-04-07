@@ -19,8 +19,6 @@ declaration =
     args:arguments?
     optional_declaration_operator
     body:body? _ {
-        console.log(body);
-return;
         return new z.Declaration(name, args || [], body);
     }
 
