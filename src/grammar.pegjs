@@ -29,9 +29,9 @@ task_line_start_operator
     = _ '-' _
 
 body
-    = '{' _ spec:task_spec* _ '}'                                    { return new z.Task(spec); }
-    / body:task_section_body                                         { return new z.Task([new z.TaskSection("do", body)]); }
-    / expr:expr                                                      { return expr; }
+    = '{' _ spec:task_spec* _ '}' { return new z.Task(spec); }
+    / body:task_section_body      { return new z.Task([new z.TaskSection("do", body)]); }
+    / expr:expr                   { return expr; }
 
 task_spec
     = task_section
@@ -63,8 +63,19 @@ task_line
 arguments
     = '(' _ arglist:arglist? _ ')'                              { return arglist; }
 
+
+cdata
+    = !('$(') c:[^;] { return c; };
+
+data_with_expr
+    = data:cdata* '$(' expr:expr ')'  { return [data.join(""), expr]; }
+
+data_without_expr
+    = data:cdata* ';'  { return [data.join("")] }
+
 line
-    = $ [^\n]+
+    = d1:data_with_expr* d2:data_without_expr   { var d = []; d1.forEach(function(i) {d = d.concat(i);}); return d.concat(d2); }
+    / d:data_without_expr                       { return d; }
 
 arglist
     = arg:arg _ nextarg:nextarg?                                { return nextarg ? [arg].concat(nextarg) : [arg]; }

@@ -3,7 +3,7 @@ contains_only_do: {
 }
 
 contains_only_task_line: {
-    - Some task
+    - Some task;
 }
 
 contains_all_sections: {

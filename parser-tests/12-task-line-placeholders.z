@@ -1,0 +1,5 @@
+a {
+    - foo;
+    - foo $(bar) $(baz);
+    - foo $(bar);
+}

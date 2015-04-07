@@ -13,7 +13,7 @@ try {
             what: 'Gee'
         });
     } else {
-        console.log("Missing operand. :)")
+        console.log("TODO: render help");
     }
 
 } catch(e) {
