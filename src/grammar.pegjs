@@ -58,33 +58,49 @@ task_section_body
     / line:task_line                                            { return [new z.TaskLine(line)]; }
 
 task_line
-    =  _ task_line_start_operator  _ data:line "\n"                                  { return new z.TaskLine(data); }
+    =  _ task_line_start_operator  _ data:line                  { return new z.TaskLine(data); }
 
 arguments
     = '(' _ arglist:arglist? _ ')'                              { return arglist; }
 
 
 cdata
-    = !('$(') c:[^;] { return c; };
+    = !('$(') c:[^\n] { return c; };
 
 data_with_expr
-    = data:cdata* '$(' expr:expr ')'  { return [data.join(""), expr]; }
+    = data:cdata* '$(' expr:expr ')' { return [data.join(""), expr]; }
 
 data_without_expr
-    = data:cdata* ';'  { return [data.join("")] }
+    = data:cdata* { return [data.join("")] }
 
 line
-    = d1:data_with_expr* d2:data_without_expr   { var d = []; d1.forEach(function(i) {d = d.concat(i);}); return d.concat(d2); }
-    / d:data_without_expr                       { return d; }
+    = d1:data_with_expr* d2:data_without_expr "\n"  {
+        var d = [];
+        d1.forEach(function(i) {
+            if (i) {
+                d = d.concat(i);
+            }
+        });
+        return d2[0].length > 0 ? d.concat(d2) : d;
+    }
+    / d:data_without_expr                     "\n"  {
+        return d;
+    }
 
 arglist
-    = arg:arg _ nextarg:nextarg?                                { return nextarg ? [arg].concat(nextarg) : [arg]; }
+    = arg:arg _ nextarg:nextarg? {
+        return nextarg ? [arg].concat(nextarg) : [arg];
+    }
 
 nextarg
-    = ',' _ arglist:arglist                                     { return arglist; }
+    = ',' _ arglist:arglist {
+        return arglist;
+    }
 
 arg
-    = i:identifier d:arg_default?                                { return new z.Arg(i, d); }
+    = i:identifier d:arg_default? {
+        return new z.Arg(i, d);
+    }
 
 arg_default
     = _ '=' _ expr:expr                                          { return expr; }

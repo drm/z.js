@@ -8,6 +8,10 @@ clean:
 $(PEGJS):
 	npm install
 
+try:
+	$(PEGJS) src/test.pegjs lib/test.js
+	node tmp.js
+
 lib/parser.js: $(PEGJS) src/grammar.pegjs lib/parser-util.js
 	$(PEGJS) src/grammar.pegjs lib/parser.js
 
