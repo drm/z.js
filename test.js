@@ -13,32 +13,19 @@ if (process.argv.length > 2) {
 }
 
 files.forEach(function (fileName) {
-    fs.readFile(path.join('parser-tests', fileName), {encoding: 'UTF-8'}, function (err, data) {
-        if (err) {
-            throw err;
-        }
-        if (fileName.match(/\.z$/)) {
-            console.log("Parsing " + fileName);
-            try {
-                var result = parser.parse(data);
-                var test = path.join('parser-tests', fileName.replace(/\.z/, '.test.js'));
-                vm.runInContext(
-                    fs.readFileSync(test),
-                    vm.createContext({
-                        assert: assert,
-                        result: result,
-                        z: z,
-                        console: console
-                    })
-                );
-            } catch (e) {
-                if (e instanceof parser.SyntaxError) {
-                    console.log(z.renderSyntaxError(fileName, data, e));
-                } else {
-                    throw e;
-                }
-            }
-            console.log("");
-        }
-    });
+    if (fileName.match(/\.z$/)) {
+        console.log("Parsing " + fileName);
+        var result = z.parseFile(path.join('parser-tests', fileName));
+        var test = path.join('parser-tests', fileName.replace(/\.z/, '.test.js'));
+        vm.runInContext(
+            fs.readFileSync(test),
+            vm.createContext({
+                assert: assert,
+                result: result,
+                z: z,
+                console: console
+            })
+        );
+        console.log("");
+    }
 });

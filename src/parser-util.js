@@ -1,6 +1,17 @@
 module.exports = (function() {
     var _ = require('lodash');
 
+    var Definition = function (name, body) {
+        this.name = name;
+        this.expr = body;
+    };
+
+    Definition.prototype = {
+        resolve: function(context) {
+            return this.expr.resolve(context);
+        }
+    };
+
     var Declaration = function (name, args, body) {
         this.name = name;
         this.args = args;
@@ -14,17 +25,24 @@ module.exports = (function() {
 
         resolve: function (context) {
             context.enterScope(this.name);
-            var ret = this.body.resolve(context);
+            if (typeof this.body === 'string') {
+                context.set(this.name, this.body);
+            } else {
+                this.args.forEach(function (a) {
+                    a.resolve(context);
+                });
+                var ret = this.body.resolve(context);
+            }
             context.exitScope(this.name);
-            return ret;
         },
 
         normalize: function() {
             if (!this.body) {
                 this.body = new Noop();
-            } else {
+            } else if (typeof this.body !== 'string') {
                 this.body.normalize();
             }
+            return this;
         }
     };
 
@@ -52,6 +70,14 @@ module.exports = (function() {
         this.default_value = default_value;
     };
 
+    Arg.prototype = {
+        resolve: function(context) {
+            if (!context.exists(this.name)) {
+                context.set(this.name, context.evaluate(this.default_value));
+            }
+        }
+    }
+
     var Context = function() {
         this.scope = [];
         this.environment = {};
@@ -64,6 +90,24 @@ module.exports = (function() {
 
         get: function(a) {
             return this.environment[a];
+        },
+
+        exists: function(a) {
+            return typeof this.environment[a] !== 'undefined';
+        },
+
+        evaluate: function(expr) {
+            switch (true) {
+                case typeof expr === 'string':
+                    return expr;
+                case typeof expr === 'number':
+                case typeof expr === 'boolean':
+                    return '' + expr;
+            }
+            if (typeof expr.resolve === 'function') {
+                return expr.resolve(this);
+            }
+            throw new Error("Unmatched type " + (typeof expr) + " (" + expr.constructor.name + ")");
         },
 
         enterScope: function(name) {
@@ -80,15 +124,17 @@ module.exports = (function() {
 
 
     var Container = function (declarations) {
-        this.declarations = declarations;
         this.context = new Context();
+        if (typeof declarations === "undefined" ){
+            declarations = [];
+        }
+
+        this.root = declarations;
     };
 
     Container.prototype = {
         get: function(n) {
-            return _.find(this.declarations, function(d) {
-                return d.name == n;
-            });
+            return this.context.get(n);
         },
 
         getContext: function() {
@@ -100,14 +146,18 @@ module.exports = (function() {
         },
 
         normalize: function() {
-            this.declarations.forEach(function(d) {
+            var ctx = this.context;
+            this.root.forEach(function(d) {
                 d.normalize();
-            })
+                ctx.set(d.name, d);
+            });
+
+            return this;
         }
     };
 
     var Task = function(spec) {
-        this.spec = spec || {};
+        this.spec = spec || [];
     };
 
     Task.prototype = {
@@ -123,6 +173,8 @@ module.exports = (function() {
                     }
                 });
             });
+
+            return this;
         },
 
         resolve: function (context) {
@@ -139,11 +191,9 @@ module.exports = (function() {
         this.name = name;
     };
 
-    Identifier.prototype = {
-        resolve: function(context) {
-            return context.get(this.name);
-        }
-    };
+    Identifier.prototype.resolve = function(context) {
+        return context.get(this.name);
+    }
 
     var TaskLine = function (elements) {
         this.elements = elements;
@@ -152,11 +202,7 @@ module.exports = (function() {
     TaskLine.prototype = {
         resolve: function(context) {
             this.elements = this.elements.map(function(e) {
-                if (e.constructor === String) {
-                    return e;
-                }
-
-                return e.resolve(context);
+                return context.evaluate(e);
             });
 
             var child_process = require('child_process');
@@ -213,7 +259,7 @@ module.exports = (function() {
                 fs = require('fs'),
                 ret,
                 fileContents = fs.readFileSync(file, 'utf-8')
-            ;
+                ;
 
             try {
                 ret = parser.parse(fileContents);
@@ -227,6 +273,7 @@ module.exports = (function() {
             return ret;
         },
         Declaration: Declaration,
+        Definition: Definition,
         Arg: Arg,
         Container: Container,
         TaskLine: TaskLine,

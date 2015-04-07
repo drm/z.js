@@ -1,13 +1,12 @@
-c: "String"
+c = "String"
 
-
-a(a = c) {
-    pre {
+a(a = c): {
+    pre: {
     }
 
-    post {
+    post: {
     }
 
-    do {
+    do: {
     }
 }

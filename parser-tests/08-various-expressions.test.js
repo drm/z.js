@@ -11,7 +11,7 @@ var expectedValues = {
 };
 
 ['a', 'b', 'c', 'd', 'e', 'f', 'g'].forEach(function(n) {
-    assert.deepEqual(new z.Declaration(n, [], expectedValues[n]), result.get(n));
+    assert.deepEqual(new z.Definition(n, expectedValues[n]), result.get(n));
 });
 
 

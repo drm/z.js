@@ -1,5 +1,5 @@
 {
-    z = require('./parser-util.js');
+    z = require('../src/parser-util.js');
 }
 
 start
@@ -9,21 +9,25 @@ start
 
 spec
     = declaration
-    / comment
-
-comment
-    = _ '/' '/' [^\n]+ _
+    / definition
 
 declaration =
     name:identifier
+    _ '=>' _
     args:arguments?
-    optional_declaration_operator
-    body:body? _ {
+    body:body _ {
         return new z.Declaration(name, args || [], body);
     }
 
+definition =
+    name:identifier
+    _ '=' _
+    body:expr _ {
+        return new z.Definition(name, body);
+    }
+
 optional_declaration_operator
-    = _ ':'? _
+    = _ ':' _
 
 task_line_start_operator
     = _ '-' _
@@ -31,7 +35,6 @@ task_line_start_operator
 body
     = '{' _ spec:task_spec* _ '}' { return new z.Task(spec); }
     / body:task_section_body      { return new z.Task([new z.TaskSection("do", body)]); }
-    / expr:expr                   { return expr; }
 
 task_spec
     = task_section

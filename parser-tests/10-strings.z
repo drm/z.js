@@ -1,4 +1,4 @@
-double: [
+double = [
     "",
     "a",
     "\n",
@@ -6,7 +6,7 @@ double: [
     "\\n",
     "\""
 ]
-single: [
+single = [
     '',
     'a',
     '\\',

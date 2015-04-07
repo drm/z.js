@@ -1,6 +1,6 @@
-hello(
-    who = "world",
-    what = 'Hello'
-) {
+WHO = "World"
+WHAT = "Hello"
+
+hello => (who = WHO, what = WHAT) {
     - echo "$(what) $(who)"
 }

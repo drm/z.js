@@ -1,10 +1,10 @@
-a: true
-b: false
-c: 1234
-d: 1234.56789
-e: "this is a string"
-f: "This is another string containing
+a = true
+b = false
+c = 1234
+d = 1234.56789
+e = "this is a string"
+f = "This is another string containing
     newlines"
-g: identifier
-h: [1, 'b', "foo"]
-i: ""
+g = identifier
+h = [1, 'b', "foo"]
+i = ""

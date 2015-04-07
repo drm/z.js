@@ -1,8 +1,4 @@
 assert.deepEqual(
-    new z.Declaration(
-        "a",
-        [],
-        "foo"
-    ),
+    new z.Definition("a", "foo"),
     result.get('a')
 );
