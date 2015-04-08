@@ -1,2 +1,1 @@
-a(a = "abc", b = "def") {
-}
+a(a = "abc", b = "def"):

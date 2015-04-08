@@ -8,12 +8,7 @@ var expectedValues = {
        "    newlines",
     g: new z.Identifier('identifier'),
     h: [1, 'b', 'foo'],
-    i: new z.Closure(
-        [
-            new z.Arg('a', new z.Identifier('h')),
-            new z.Arg('b', new z.Identifier('g'))
-        ]
-    )
+    i: {a: "b", c: ["d", "e", "f"]}
 };
 
 ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'i'].forEach(function(n) {

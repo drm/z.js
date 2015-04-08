@@ -21,5 +21,5 @@ parser_test: lib/parser.js parser-tests/* test.js
 	node test.js $(tests)
 
 functional_test: lib/parser.js functional-tests/*
-	node src/main.js functional-tests/01-hello.z hello
+	node src/main.js functional-tests/01-hello.z say
 

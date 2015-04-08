@@ -3,67 +3,58 @@
 }
 
 start
-    = declarations:spec* {
-        return new z.Container(declarations);
+    = list:statement* {
+        return new z.Container(list.filter(function(v) {
+            return !!v;
+        }));
     }
 
-spec
-    = definition
-    / function
+statement
+    = task
+    / definition
     / comment
 
-function
-    = name:identifier _ args:arguments? _ body:body _ { return new z.Definition(name, new z.Closure(args, body)); }
-
-comment = _ '/' '/' [^\n]+ "\n" _
-
-definition =
-    name:identifier
-    _ '=' _
-    body:expr _ {
-        return new z.Definition(name, body);
+comment
+    = (
+        single_line_comment
+    /   multiline_comment
+    ) {
+        return null;
     }
 
-optional_declaration_operator
-    = _ ':' _
+single_line_comment
+    = '#' [^\n]+ "\n"
 
-task_line_start_operator
-    = _ '-' _
+multiline_comment
+    = '/*' ( !('*/') . )* '*/'
 
-body
-    = '{' _ spec:task_spec* _ '}' { return new z.Task(spec); }
-    / body:task_section_body      { return new z.Task([new z.TaskSection("do", body)]); }
+task
+    = name:identifier _ args:arguments? _ ':' ws deps:deplist? "\n"
+      lines:task_line* _ {
+        return new z.Definition(
+            name,
+            new z.Task(
+                deps,
+                new z.Closure(
+                    args,
+                    lines
+                )
+            )
+        );
+    }
 
-task_spec
-    = task_section
-    / precondition
-
-task_section
-    = _ name:section_name optional_declaration_operator body:task_section_body _       { return new z.TaskSection(name, body); }
-
-precondition
-    = name:precondition_name _ optional_declaration_operator expr:expr _      { return new z.TaskPrecondition(name, expr); }
-
-section_name
-    = $ 'do'
-    / $ 'pre'
-    / $ 'post'
-
-precondition_name
-    = 'if'
-    / 'unless'
-    / 'assert'
-
-task_section_body
-    = '{' _ lines:task_line* _ '}'                              { return lines; }
-    / line:task_line                                            { return [new z.TaskLine(line)]; }
+ch
+    = !('\n') c:. {
+        return c;
+    }
 
 task_line
-    =  _ task_line_start_operator  _ data:line                  { return new z.TaskLine(data); }
-
-arguments
-    = '(' _ arglist:arglist? _ ')'                              { return arglist; }
-
+    = indent '@' i:identifier "\n" {
+        return new z.Identifier(i);
+    }
+    / indent data:line "\n" {
+        return new z.TaskLine(data);
+    }
 
 cdata
     = !('$(') c:[^\n] { return c; };
@@ -75,7 +66,7 @@ data_without_expr
     = data:cdata* { return [data.join("")] }
 
 line
-    = d1:data_with_expr* d2:data_without_expr "\n"  {
+    = d1:data_with_expr* d2:data_without_expr {
         var d = [];
         d1.forEach(function(i) {
             if (i) {
@@ -88,8 +79,26 @@ line
         return d;
     }
 
+definition
+    = i:identifier _ '=' _ e:expr _ {
+        return new z.Definition(i, e);
+    }
+
+deplist = dep*
+
+dep
+    = ws i:identifier ws {
+        return new z.Identifier(i);
+    }
+
+arguments
+    = '(' args:arglist? ')' {
+        return args;
+    }
+
+
 arglist
-    = arg:arg _ nextarg:nextarg? {
+    = _ arg:arg _ nextarg:nextarg? _ {
         return nextarg ? [arg].concat(nextarg) : [arg];
     }
 
@@ -106,59 +115,52 @@ arg
 arg_default
     = _ '=' _ expr:expr                                          { return expr; }
 
+
+identifier
+    = f:[a-z_-]i tail:[a-z0-9_-]i* {
+        return f + tail.join("");
+    }
+
 expr
-    = arithmetic_expr
-    / string
-    / boolean
+    = string
     / number
-    / call
+    / boolean
+    / null
+    / i:identifier {
+        return new z.Identifier(i);
+    }
     / array_literal
-    / closure
-    / identifier:identifier                                       { return new z.Identifier(identifier); }
-
-closure
-    = args:arguments _ '=>' _ body:body   { return new z.Closure(args, body); }
-
-op_sum
-    = '+'
-    / '-'
-
-op_mul
-    = '*'
-    / '/'
-
-arithmetic_expr =
-    left:sum_operand
-    _ op:op_sum
-    _ right:sum_operand {
-        return new z.BinOp(op, left, right);
-    }
-
-parenthesized_expr =
-    '(' expr:expr ')' {
-        return expr;
-    }
-
-sum_operand =
-    ( multiplication
-        / number
-        / string
-        / parenthesized_expr
-    )
-
-multiplication =
-    left:multiplication_operand
-    _ op:op_mul
-    _ right:multiplication_operand {
-        return new z.BinOp(op, left, right);
-    }
-
-multiplication_operand =
-    number
-    / parenthesized_expr
+    / call
+    / object_literal
 
 array_literal
-    = '[' _ list:expr_list _ ']'                                  { return list; }
+    = '[' _ list:expr_list? _ ']' {
+        return list;
+    }
+
+object_literal
+    = '{' _ list:object_member_list? _ '}' {
+        var o = {};
+        list.forEach(function(k) {
+            o[k[0]] = k[1];
+        });
+        return o;
+    }
+
+object_member_list
+    = o:object_member tail:object_member_tail* {
+        return [o].concat(tail);
+    }
+object_member_tail
+    = ',' _ o:object_member {
+        return o;
+    }
+
+object_member
+    = name:( string / identifier)
+      _ ':' _ value:expr {
+        return [name, value];
+    }
 
 expr_list
     = expr:expr _ ',' _ tail:expr_list                            { return [expr].concat(tail); }
@@ -170,8 +172,6 @@ call
 call_args
     = expr*
 
-identifier
-    = $ [a-zA-Z_]+
 
 string
     = double_quoted_string
@@ -229,9 +229,12 @@ null
 // optional whitespace
 _  = [ \t\r\n]*
 
+ws = [ \t]*
+
+indent = [ \t]+
+
 // mandatory whitespace
 __ = [ \t\r\n]+
-
 
 DIGIT  = [0-9]
 HEXDIG = [0-9a-f]i

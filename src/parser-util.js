@@ -29,11 +29,13 @@ module.exports = (function() {
 
     Closure.prototype = {
         resolve: function (context) {
-        context.enterScope(this.name);
+            context.enterScope(this.name);
             this.args.forEach(function (a) {
                 a.resolve(context);
             });
-            var ret = this.body.resolve(context);
+            var ret = this.body.forEach(function(d) {
+                d.resolve(context);
+            });
             context.exitScope(this.name);
             return ret;
         },
@@ -128,7 +130,6 @@ module.exports = (function() {
         }
     };
 
-
     var Container = function (declarations) {
         this.context = new Context();
         if (typeof declarations === "undefined" ){
@@ -148,6 +149,9 @@ module.exports = (function() {
         },
 
         resolve: function(v) {
+            if (!this.context.exists(v)) {
+                throw new Error("Trying to resolve undefined value '" + v  + "'");
+            }
             return this.get(v).resolve(this.getContext());
         },
 
@@ -166,34 +170,20 @@ module.exports = (function() {
         }
     };
 
-    var Task = function(spec) {
-        this.spec = spec || [];
+    var Task = function(deps, body) {
+        this.deps = deps || [];
+        this.body = body;
     };
 
     Task.prototype = {
         normalize: function() {
-            var self = this;
-
-            ['pre', 'do', 'post'].forEach(function(scope) {
-                self[scope] = [];
-
-                self.spec.forEach(function(el) {
-                    if (el.name === scope) {
-                        self[scope] = self[scope].concat(el.lines);
-                    }
-                });
-            });
-
-            return this;
         },
 
         resolve: function (context) {
-            var self = this;
-            ['pre', 'do', 'post'].forEach(function(scope) {
-                self[scope].forEach(function(k) {
-                    k.resolve(context);
-                });
+            this.deps.forEach(function(d) {
+                d.resolve(context);
             });
+            return this.body.resolve(context);
         }
     };
 
@@ -203,7 +193,7 @@ module.exports = (function() {
 
     Identifier.prototype.resolve = function(context) {
         return context.evaluate(context.get(this.name));
-    }
+    };
 
     var TaskLine = function (elements) {
         this.elements = elements;
@@ -218,10 +208,10 @@ module.exports = (function() {
             var child_process = require('child_process');
             var s = child_process.spawn('/bin/bash', ['-e']);
             s.stdout.on('data', function(data) {
-                console.log('' + data);
+                process.stdout.write(data);
             });
             s.stdin.write(this.elements.join(""));
-            s.stdin.write("\nexit 0;\n");
+            s.stdin.end();
         }
     };
 
@@ -275,7 +265,7 @@ module.exports = (function() {
                 ret = parser.parse(fileContents);
             } catch (e) {
                 if (e.constructor === parser.SyntaxError) {
-                    renderSyntaxError(file, fileContents, e);
+                    console.log(renderSyntaxError(file, fileContents, e));
                 }
                 throw e;
             }

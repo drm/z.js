@@ -1,12 +1,4 @@
 c = "String"
 
-a(a = c) {
-    pre: {
-    }
-
-    post: {
-    }
-
-    do: {
-    }
-}
+a(a = c):
+    cd build && rm -rf ./*

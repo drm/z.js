@@ -1,5 +1,4 @@
-a {
-    - foo
-    - foo $(bar)
-    - foo $(bar) $(baz)
-}
+a:
+    foo
+    foo $(bar)
+    foo $(bar) $(baz)

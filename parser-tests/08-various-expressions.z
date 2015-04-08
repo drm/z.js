@@ -7,6 +7,6 @@ f = "This is another string containing
     newlines"
 g = identifier
 h = [1, 'b', "foo"]
-i = ""
-j = (a = h, b = g) => {}
+i = {a: "b", c: ["d", "e", "f"]}
+
 

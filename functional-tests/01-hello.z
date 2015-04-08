@@ -1,7 +1,12 @@
-WHO  = "World"
-WHAT = "Hello"
+greeting = "Hello"
+whom = "World"
 
+dep:
+    echo START
 
-hello(who = WHO, what = WHAT) {
-    - echo "$(what) $(who)"
-}
+say(what = greeting, whom = audience): dep
+    echo $(what) $(whom)
+    @trigger
+
+trigger:
+    echo FINISH
