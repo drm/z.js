@@ -15,38 +15,33 @@ module.exports = (function() {
         },
 
         normalize: function() {
+            if (this.expr.normalize) {
+                this.expr.normalize();
+            }
             return this;
         }
     };
 
-    var Declaration = function (name, args, body) {
-        this.name = name;
-        this.args = args;
-        this.body = body;
+    var Closure = function (args, body) {
+        this.args = args || [];
+        this.body = body || [];
     };
 
-    Declaration.prototype = {
-        getValue: function () {
-            return this.body;
-        },
-
+    Closure.prototype = {
         resolve: function (context) {
-            context.enterScope(this.name);
-            if (typeof this.body === 'string') {
-                context.set(this.name, this.body);
-            } else {
-                this.args.forEach(function (a) {
-                    a.resolve(context);
-                });
-                var ret = this.body.resolve(context);
-            }
+        context.enterScope(this.name);
+            this.args.forEach(function (a) {
+                a.resolve(context);
+            });
+            var ret = this.body.resolve(context);
             context.exitScope(this.name);
+            return ret;
         },
 
         normalize: function() {
             if (!this.body) {
                 this.body = new Noop();
-            } else if (typeof this.expr === 'object') {
+            } else if (typeof this.body === 'object') {
                 this.body.normalize();
             }
             return this;
@@ -159,7 +154,7 @@ module.exports = (function() {
         normalize: function() {
             var ctx = this.context;
             this.root.filter(function(d) {
-                return d instanceof Definition || d instanceof Declaration;
+                return d instanceof Definition;
             }).forEach(function(d) {
                 if (typeof d === 'object') {
                     d.normalize();
@@ -207,7 +202,7 @@ module.exports = (function() {
     };
 
     Identifier.prototype.resolve = function(context) {
-        return context.get(this.name);
+        return context.evaluate(context.get(this.name));
     }
 
     var TaskLine = function (elements) {
@@ -287,7 +282,7 @@ module.exports = (function() {
             ret.normalize();
             return ret;
         },
-        Declaration: Declaration,
+        Closure: Closure,
         Definition: Definition,
         Arg: Arg,
         Container: Container,

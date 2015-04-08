@@ -1,4 +1,4 @@
-var spec = result.get('a').getValue().spec[0];
+var spec = result.get('a').expr.body.spec[0];
 
 assert.equal(spec.name, 'do');
 assert.deepEqual(spec.lines[0], new z.TaskLine(['foo']));

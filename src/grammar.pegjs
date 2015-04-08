@@ -8,19 +8,14 @@ start
     }
 
 spec
-    = declaration
-    / definition
+    = definition
+    / function
     / comment
 
-comment = _ '/' '/' [^\n]+ "\n" _
+function
+    = name:identifier _ args:arguments? _ body:body _ { return new z.Definition(name, new z.Closure(args, body)); }
 
-declaration =
-    name:identifier
-    _ '=>'
-    _ args:arguments?
-    _ body:body _ {
-        return new z.Declaration(name, args || [], body);
-    }
+comment = _ '/' '/' [^\n]+ "\n" _
 
 definition =
     name:identifier
@@ -118,8 +113,11 @@ expr
     / number
     / call
     / array_literal
+    / closure
     / identifier:identifier                                       { return new z.Identifier(identifier); }
 
+closure
+    = args:arguments _ '=>' _ body:body   { return new z.Closure(args, body); }
 
 op_sum
     = '+'
