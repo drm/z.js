@@ -8,3 +8,5 @@ f = "This is another string containing
 g = identifier
 h = [1, 'b', "foo"]
 i = ""
+j = (a = h, b = g) => {}
+
