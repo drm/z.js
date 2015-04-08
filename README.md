@@ -1,7 +1,6 @@
 # Z, the Zicht automation tool #
 
-Originally developed as a PHP console application, Z was ported to JavaScript in 2015 to gain access to a greater
-audience and reiterate over some of the clunky features of the original version.
+Originally developed as a PHP console application, Z is being ported to JavaScript to gain access to a greater
+audience, reiterate over some of the clunky features of the original version and slim down the code base.
 
-This is not nearly in a testable phase, even
-
+Currently, the parser grammar is being developed using PEGJS.
