@@ -13,6 +13,9 @@ statement
     = task
     / definition
     / comment
+    / NEWLINE {
+        return null;
+    }
 
 comment
     = (
@@ -23,13 +26,13 @@ comment
     }
 
 single_line_comment
-    = '#' [^\n]+ "\n"
+    = '#' [^\n]+ NEWLINE
 
 multiline_comment
     = '/*' ( !('*/') . )* '*/'
 
 task
-    = name:identifier _ args:arguments? _ ':' ws deps:deplist? "\n"
+    = name:identifier _ args:arguments? _ ':' ws deps:deplist? NEWLINE
       lines:task_line* _ {
         return new z.Definition(
             name,
@@ -49,10 +52,10 @@ ch
     }
 
 task_line
-    = indent '@' i:identifier "\n" {
+    = indent '@' i:identifier NEWLINE {
         return new z.Identifier(i);
     }
-    / indent data:line "\n" {
+    / indent data:line NEWLINE {
         return new z.TaskLine(data);
     }
 
@@ -75,7 +78,7 @@ line
         });
         return d2[0].length > 0 ? d.concat(d2) : d;
     }
-    / d:data_without_expr                     "\n"  {
+    / d:data_without_expr                     NEWLINE  {
         return d;
     }
 
@@ -163,8 +166,12 @@ object_member
     }
 
 expr_list
-    = expr:expr _ ',' _ tail:expr_list                            { return [expr].concat(tail); }
-    / expr:expr                                                   { return [expr]; }
+    = expr:expr _ ',' _ tail:expr_list {
+        return [expr].concat(tail);
+    }
+    / expr:expr {
+        return [expr];
+    }
 
 call
     = identifier _ '(' _ call_args? _ ')'
@@ -238,3 +245,4 @@ __ = [ \t\r\n]+
 
 DIGIT  = [0-9]
 HEXDIG = [0-9a-f]i
+NEWLINE = "\n"
