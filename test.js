@@ -16,16 +16,21 @@ files.forEach(function (fileName) {
     if (fileName.match(/\.z$/)) {
         console.log("Parsing " + fileName);
         var result = z.parseFile(path.join('parser-tests', fileName));
-        var test = path.join('parser-tests', fileName.replace(/\.z/, '.test.js'));
-        vm.runInContext(
-            fs.readFileSync(test),
-            vm.createContext({
-                assert: assert,
-                result: result,
-                z: z,
-                console: console
-            })
-        );
+        var resultFile = fileName.replace(/\.z/, '.test.js');
+        var test = path.join('parser-tests', resultFile);
+        try {
+            vm.runInContext(
+                fs.readFileSync(test),
+                vm.createContext({
+                    assert: assert,
+                    result: result,
+                    z: z,
+                    console: console
+                })
+            );
+        } catch(e) {
+            console.error("Error in test file " + resultFile, e);
+        }
         console.log("");
     }
 });

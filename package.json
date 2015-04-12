@@ -8,8 +8,6 @@
   "author": "Gerard van Helden <drm@melp.nl>",
   "license": "MIT",
   "dependencies": {
-    "pegjs": "*",
-    "assert-diff": "*",
-    "lodash": "*"
+    "pegjs": "*"
   }
 }

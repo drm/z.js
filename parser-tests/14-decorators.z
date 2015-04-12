@@ -1,0 +1,4 @@
+@first
+@second(with="parameter")
+task:
+    echo hello

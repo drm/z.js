@@ -1,12 +1,23 @@
-greeting = "Hello"
-whom = "World"
+{{
+    var myDecorator = function(decoratee, args) {
+        this.decoratee = decoratee;
+    }
 
-dep:
-    echo START
+    myDecorator.prototype.resolve = function(context) {
+        return this.decoratee.resolve(context);
+    }
 
-say(what = greeting, whom = audience): dep
+    container.set('myDecorator', myDecorator);
+}}
+
+@myDecorator("World")
+dep(what = "Hello"):
+    echo "Welcome!"
+
+@depends(dep)
+@triggers(trigger)
+say(what, whom = audience):
     echo $(what) $(whom)
-    @trigger
 
 trigger:
-    echo FINISH
+    echo "Bye!"

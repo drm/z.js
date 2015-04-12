@@ -1,14 +1,48 @@
 {
     z = require('../src/parser-util.js');
+
+    function decorate(decorators, object) {
+        decorators.forEach(function(decorator) {
+            object = new z.Decorator(object, decorator);
+        });
+        return object;
+    }
 }
 
+// -------------------------------------------------------------------------------------------------------------------
+// Start rules
+// -------------------------------------------------------------------------------------------------------------------
+
 start
-    = list:statement* {
-        return new z.Container(list.filter(function(v) {
+    = prelude:prelude?
+      list:statement* {
+        var container = new z.Container(list.filter(function(v) {
             return !!v;
         }));
+
+        container.addPrelude(prelude);
+
+        return container;
     }
 
+// -------------------------------------------------------------------------------------------------------------------
+// Prelude
+// -------------------------------------------------------------------------------------------------------------------
+
+PRELUDE_START = '{{'
+PRELUDE_END = '}}'
+prelude_ch
+    = (!(PRELUDE_END) ch:.) {
+        return ch;
+    }
+prelude
+    = PRELUDE_START content:prelude_ch* PRELUDE_END {
+        return content.join("");
+    }
+
+// -------------------------------------------------------------------------------------------------------------------
+// Statements
+// -------------------------------------------------------------------------------------------------------------------
 statement
     = task
     / definition
@@ -17,6 +51,9 @@ statement
         return null;
     }
 
+// -------------------------------------------------------------------------------------------------------------------
+// Comments
+// -------------------------------------------------------------------------------------------------------------------
 comment
     = (
         single_line_comment
@@ -26,24 +63,31 @@ comment
     }
 
 single_line_comment
-    = '#' [^\n]+ NEWLINE
+    = '#' [^\n]+ EOL
+    / '//' [^\n]+ EOL
 
 multiline_comment
     = '/*' ( !('*/') . )* '*/'
 
+// -------------------------------------------------------------------------------------------------------------------
+// Task definition
+// -------------------------------------------------------------------------------------------------------------------
 task
-    = name:identifier _ args:arguments? _ ':' ws deps:deplist? NEWLINE
+    = decorators:decorator*
+      name:identifier ws args:arguments? ws ':' ws EOL
       lines:task_line* _ {
         return new z.Definition(
             name,
-            new z.Task(
-                deps,
-                new z.Closure(
-                    args,
-                    lines
-                )
+            decorate(
+                decorators,
+                new z.Closure(args || [], lines)
             )
         );
+    }
+
+decorator
+    = '@' e:expr ws EOL {
+        return e;
     }
 
 ch
@@ -52,10 +96,10 @@ ch
     }
 
 task_line
-    = indent '@' i:identifier NEWLINE {
+    = indent '@' i:identifier EOL {
         return new z.Identifier(i);
     }
-    / indent data:line NEWLINE {
+    / indent data:line EOL {
         return new z.TaskLine(data);
     }
 
@@ -78,10 +122,14 @@ line
         });
         return d2[0].length > 0 ? d.concat(d2) : d;
     }
-    / d:data_without_expr                     NEWLINE  {
+    / d:data_without_expr EOL  {
         return d;
     }
 
+
+// -------------------------------------------------------------------------------------------------------------------
+// Regular definition
+// -------------------------------------------------------------------------------------------------------------------
 definition
     = i:identifier _ '=' _ e:expr _ {
         return new z.Definition(i, e);
@@ -118,35 +166,67 @@ arg
 arg_default
     = _ '=' _ expr:expr                                          { return expr; }
 
-
 identifier
     = f:[a-z_-]i tail:[a-z0-9_-]i* {
         return f + tail.join("");
     }
 
 expr
-    = string
-    / number
-    / boolean
-    / null
-    / i:identifier {
-        return new z.Identifier(i);
+    = e:(
+        '(' expr: expr ')' {
+            return expr
+        }
+        / string
+        / number
+        / boolean
+        / null
+        / i:identifier {
+            return new z.Identifier(i);
+        }
+        / array_literal
+        / object_literal
+    ) s:subscript* {
+        s.forEach(function(subscript) {
+            subscript.setSubject(e);
+            e = subscript;
+        });
+        return e;
     }
-    / array_literal
-    / call
-    / object_literal
+
+subscript
+    = invocation
+    / dot_member_access
+    / member_access
+
+invocation
+    =  '(' args:expr_list? ')' {
+        return new z.Invocation(args);
+    }
+
+dot_member_access
+    = '.' name:identifier {
+        return new z.MemberAccess(name);
+    }
+
+member_access
+    = '[' e:expr ']' {
+        return new z.MemberAccess(e);
+    }
+
 
 array_literal
     = '[' _ list:expr_list? _ ']' {
-        return list;
+        return list || [];
     }
 
 object_literal
     = '{' _ list:object_member_list? _ '}' {
         var o = {};
-        list.forEach(function(k) {
-            o[k[0]] = k[1];
-        });
+        if (list) {
+            list.forEach(function(k) {
+                o[k[0]] = k[1];
+            });
+        }
         return o;
     }
 
@@ -172,12 +252,6 @@ expr_list
     / expr:expr {
         return [expr];
     }
-
-call
-    = identifier _ '(' _ call_args? _ ')'
-
-call_args
-    = expr*
 
 
 string
@@ -243,6 +317,8 @@ indent = [ \t]+
 // mandatory whitespace
 __ = [ \t\r\n]+
 
+EOL = ( NEWLINE / EOF )
+EOF = !.
 DIGIT  = [0-9]
 HEXDIG = [0-9a-f]i
 NEWLINE = "\n"
