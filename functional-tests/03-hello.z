@@ -1,0 +1,8 @@
+{{
+container.set('what', "Hello");
+container.set('whom', "World");
+}}
+
+say(what, whom):
+    echo $(what) $(whom)
+

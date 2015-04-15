@@ -1,0 +1,12 @@
+{{
+    container.set('decorated', function(object, args) {
+        container.set('what', "Hello");
+        container.set('whom', "World");
+        return object;
+    });
+}}
+
+@decorated
+say(what, whom):
+    echo $(what) $(whom)
+

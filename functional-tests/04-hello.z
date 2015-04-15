@@ -1,0 +1,13 @@
+{{
+container.set('get_what', function() {
+    return "Hello";
+});
+container.set('get_whom', function () {
+    return "World";
+});
+}}
+
+say(what = get_what(), whom = get_whom()):
+    echo $(what) $(whom)
+
+

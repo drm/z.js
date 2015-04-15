@@ -1,0 +1,15 @@
+{{
+var Foo = function(value) {
+    this.value = value;
+};
+
+Foo.prototype.resolve = function() {
+    return this.value;
+}
+
+container.set('get_what', new Foo("Hello"));
+container.set('get_whom', new Foo("World"));
+}}
+
+say(what = get_what, whom = get_whom):
+    echo $(what) $(whom)

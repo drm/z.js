@@ -5,37 +5,24 @@ module.exports = (function () {
         this.name = name;
         this.expr = body;
     };
-
     Definition.prototype = {
         resolve: function (context) {
             if (typeof this.expr === 'object') {
                 return this.expr.resolve(context);
             }
             return this.expr;
-        },
-
-        normalize: function () {
-            if (this.expr.normalize) {
-                this.expr.normalize();
-            }
-            return this;
         }
     };
 
-    var Decorator = function (decoratee, expr) {
-        this.decoratee = decoratee;
+    var Decorator = function (expr, object) {
         this.expr = expr;
+        this.decoratee = object;
     };
-
     Decorator.prototype = {
         resolve: function (context) {
-            var decoratorConstructor = this.expr.resolve(context); //.resolve(this.expr);
-            var self = this;
-            var decorator = new decoratorConstructor(
-                self.decoratee,
-                self.args
-            );
-            return decorator.resolve(context);
+            var decorator = context.evaluate(this.expr.resolve(context));
+            var decorated = decorator(this.decoratee);
+            return decorated.resolve(context);
         }
     };
 
@@ -51,6 +38,7 @@ module.exports = (function () {
             return this.decoratee.resolve(context);
         }
     };
+
     var TriggerDecorator = function (decoratee, args) {
         this.decoratee = decoratee;
         this.args = args;
@@ -76,7 +64,7 @@ module.exports = (function () {
 
         resolve: function(context) {
             var target = this.expr.resolve(context);
-            return target.call(this.args.map(function(a) {
+            return target.call(context, this.args.map(function(a) {
                 return context.evaluate(a);
             }));
         }
@@ -101,25 +89,14 @@ module.exports = (function () {
 
     Closure.prototype = {
         resolve: function (context) {
-            context.enterScope(this.name);
             this.args.forEach(function (a) {
                 a.resolve(context);
             });
-            var ret = this.body.forEach(function (d) {
-                d.resolve(context);
+            var ret;
+            this.body.forEach(function (d) {
+                ret = context.evaluate(d);
             });
-            context.exitScope(this.name);
             return ret;
-        },
-
-        normalize: function () {
-            this.args.forEach(function (a) {
-                a.normalize();
-            });
-            this.body.forEach(function (o) {
-                o.normalize();
-            });
-            return this;
         }
     };
 
@@ -144,12 +121,8 @@ module.exports = (function () {
             if (!context.exists(this.name)) {
                 context.set(this.name, context.evaluate(this.default_value));
             }
-        },
-
-        normalize: function () {
-            return this;
         }
-    }
+    };
 
     var Context = function () {
         this.scope = [];
@@ -199,16 +172,8 @@ module.exports = (function () {
         }
     };
 
-    var Container = function (declarations) {
+    var Container = function () {
         this.context = new Context();
-        if (typeof declarations === "undefined") {
-            declarations = [];
-        }
-
-        this.root = declarations;
-
-        this.context.set('depends', DependsDecorator);
-        this.context.set('triggers', TriggerDecorator);
     };
 
     Container.prototype = {
@@ -239,20 +204,6 @@ module.exports = (function () {
                 throw new Error("Trying to resolve undefined value '" + v + "'");
             }
             return this.get(v).resolve(this.getContext());
-        },
-
-        normalize: function () {
-            var ctx = this.context;
-            this.root.filter(function (d) {
-                return d instanceof Definition;
-            }).forEach(function (d) {
-                if (typeof d === 'object') {
-                    d.normalize();
-                }
-                ctx.set(d.name, d);
-            });
-
-            return this;
         }
     };
 
@@ -271,7 +222,11 @@ module.exports = (function () {
     TaskLine.prototype = {
         resolve: function (context) {
             this.elements = this.elements.map(function (e) {
-                return context.evaluate(e);
+                var ret = context.evaluate(e);
+                if (typeof ret === 'function') {
+                    ret = ret.call();
+                }
+                return ret;
             });
 
             var child_process = require('child_process');
@@ -281,19 +236,7 @@ module.exports = (function () {
             });
             s.stdin.write(this.elements.join(""));
             s.stdin.end();
-        },
-
-        normalize: function () {
-            return this;
         }
-    };
-
-    var Call = function(fn, args) {
-
-    };
-
-    Call.prototype.resolve = function (context) {
-        return context.resolve(this.fn).apply(this.args);
     };
 
     var TaskSection = function (name, lines) {
@@ -343,10 +286,8 @@ module.exports = (function () {
                 }
                 throw e;
             }
-            ret.normalize();
             return ret;
         },
-        Call: Call,
         Closure: Closure,
         Definition: Definition,
         Decorator: Decorator,

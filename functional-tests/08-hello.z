@@ -1,0 +1,14 @@
+{{
+    container.set('decorated', function(args) {
+        return function(object) {
+            object.args[0].default_value = args[0];
+            object.args[1].default_value = args[1];
+            return object;
+        }
+    });
+}}
+
+@decorated("Hello", "World")
+say(what, whom):
+    echo $(what) $(whom)
+

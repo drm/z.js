@@ -1,0 +1,6 @@
+what = "Hello"
+whom = "World"
+
+say(what, whom):
+    echo $(what) $(whom)
+

@@ -3,7 +3,7 @@
 
     function decorate(decorators, object) {
         decorators.forEach(function(decorator) {
-            object = new z.Decorator(object, decorator);
+            object = new z.Decorator(decorator, object);
         });
         return object;
     }
@@ -16,11 +16,14 @@
 start
     = prelude:prelude?
       list:statement* {
-        var container = new z.Container(list.filter(function(v) {
-            return !!v;
-        }));
-
+        var container = new z.Container();
         container.addPrelude(prelude);
+
+        list.forEach(function(d) {
+            if (!!d) {
+                container.context.set(d.name, d);
+            }
+        });
 
         return container;
     }
@@ -31,13 +34,13 @@ start
 
 PRELUDE_START = '{{'
 PRELUDE_END = '}}'
-prelude_ch
-    = (!(PRELUDE_END) ch:.) {
-        return ch;
-    }
 prelude
-    = PRELUDE_START content:prelude_ch* PRELUDE_END {
-        return content.join("");
+    = PRELUDE_START
+        content:$(
+            (!(PRELUDE_END) ch:.)
+        )*
+        PRELUDE_END {
+        return content;
     }
 
 // -------------------------------------------------------------------------------------------------------------------
@@ -62,9 +65,12 @@ comment
         return null;
     }
 
+inline_comment
+    = ( '#' / '//' ) [^\n]+
+    / multiline_comment
+
 single_line_comment
-    = '#' [^\n]+ EOL
-    / '//' [^\n]+ EOL
+    = ( '#' / '//' ) [^\n]+ EOL
 
 multiline_comment
     = '/*' ( !('*/') . )* '*/'
@@ -173,7 +179,13 @@ identifier
 
 expr
     = e:(
-        '(' expr: expr ')' {
+        '(' args:arglist? ')' ws '=>' ws expr:expr {
+            return new z.Closure(
+                args,
+                [expr]
+            );
+        }
+        / '(' expr: expr ')' {
             return expr
         }
         / string

@@ -22,4 +22,12 @@ parser_test: lib/parser.js parser-tests/* test.js
 
 functional_test: lib/parser.js functional-tests/*
 	node src/main.js functional-tests/01-hello.z say
+	node src/main.js functional-tests/02-hello.z say
+	node src/main.js functional-tests/03-hello.z say
+	node src/main.js functional-tests/04-hello.z say
+	node src/main.js functional-tests/05-hello.z say
+	node src/main.js functional-tests/06-hello.z say
+	node src/main.js functional-tests/07-hello.z say
+	node src/main.js functional-tests/08-hello.z say
+	node src/main.js functional-tests/09-hello.z say
 

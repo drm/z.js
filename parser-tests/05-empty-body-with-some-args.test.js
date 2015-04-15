@@ -10,6 +10,6 @@ assert.deepEqual(
                 new z.Arg("e", null)
             ]
         )
-    ).normalize(),
+    ),
     result.get('a')
 );

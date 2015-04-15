@@ -1,0 +1,14 @@
+{{
+    var Foo = function(value) {
+        this.value = value;
+    };
+
+    Foo.prototype.resolve = function() {
+        return this.value;
+    }
+
+    container.set('fn', function(v) { return new Foo(v); });
+}}
+
+say(what = fn("Hello"), whom = fn("World")):
+    echo $(what) $(whom)

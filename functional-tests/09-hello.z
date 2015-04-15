@@ -1,0 +1,12 @@
+audience = () => "World"
+
+dep:
+    echo "Welcome!"
+
+@depends(dep)
+@triggers(trigger)
+say(what, whom = audience):
+    echo $(what) $(whom)
+
+trigger:
+    echo "Bye!"

@@ -1,1 +1,1 @@
-console.log(result.root);
+console.log(result.get('var'));

@@ -34,6 +34,6 @@
 //
 //Object.keys(expectedSpecs).forEach(function (v) {
 //    assert.deepEqual(
-//        new z.Definition(v, new z.Closure([], new z.Task(expectedSpecs[v]))).normalize(), result.get(v)
+//        new z.Definition(v, new z.Closure([], new z.Task(expectedSpecs[v]))), result.get(v)
 //    );
 //});

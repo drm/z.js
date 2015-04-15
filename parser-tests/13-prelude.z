@@ -1,6 +1,3 @@
 {{
     container.set('var', 'Hello world');
 }}
-
-a:
-    echo $(var);
