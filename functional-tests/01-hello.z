@@ -1,3 +1,5 @@
+// closures
+
 hello = () => "Hello"
 world = () => "World"
 

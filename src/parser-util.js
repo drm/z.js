@@ -145,17 +145,16 @@ module.exports = (function () {
         evaluate: function (expr) {
             switch (true) {
                 case typeof expr === 'string':
-                    return expr;
                 case typeof expr === 'number':
                 case typeof expr === 'boolean':
-                    return '' + expr;
+                case typeof expr === 'null':
+                case typeof expr === 'function':
+                    return expr;
                 case typeof expr == 'undefined':
                     throw new Error("Cannot resolve undefined value");
             }
             if (typeof expr.resolve === 'function') {
                 return expr.resolve(this);
-            } else if (typeof expr === 'function') {
-                return expr;
             }
             throw new Error("Unmatched type " + (typeof expr) + " (" + expr.constructor.name + ")");
         },
