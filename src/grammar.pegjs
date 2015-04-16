@@ -211,7 +211,7 @@ expr
                   op[1]
               );
 
-            if (typeof ret.right.op !== 'undefined' && ret.right.precedence() > ret.precedence()) {
+            if (typeof ret.right.op !== 'undefined' && ret.right.precedence() >= ret.precedence()) {
                 ret = new z.BinOp(
                     ret.right.op,
                     new z.BinOp(
