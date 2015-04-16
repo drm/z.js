@@ -1,3 +1,8 @@
+my_object = {
+    my_function: (a) => [a, a, a]
+
+}
+
 a = true
 b = false
 c = 1234
@@ -16,5 +21,9 @@ l = some_call("one", "two")
 // subscripts
 m = ["a", "b", "c"][0]
 n = ["a", "b", "c"].length
-o = ["a", "b", "c"]("invoke")
+o = ["a", "b", "c"].slice(1, 1)
+p = [["a"], ["b"], ["c"]][1][0]
+q = [["a"], [(smiley) => [smiley]], ["c"]][1][0](":)")
+r = my_object.my_function("\o/")
 
+// closures

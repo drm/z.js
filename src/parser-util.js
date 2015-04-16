@@ -1,6 +1,4 @@
 module.exports = (function () {
-    var vm = require('vm');
-
     var Definition = function (name, body) {
         this.name = name;
         this.expr = body;
@@ -78,6 +76,10 @@ module.exports = (function () {
         setSubject: function(subject) {
             this.expr = subject;
             return this;
+        },
+
+        resolve: function(context) {
+            return this.expr.resolve(context)[context.evaluate(this.member)];
         }
     };
 
@@ -89,14 +91,19 @@ module.exports = (function () {
 
     Closure.prototype = {
         resolve: function (context) {
-            this.args.forEach(function (a) {
-                a.resolve(context);
-            });
-            var ret;
-            this.body.forEach(function (d) {
-                ret = context.evaluate(d);
-            });
-            return ret;
+            var body = this.body;
+            var argSpec = this.args;
+            return function(args) {
+                var closureArgs = args;
+                argSpec.forEach(function (a, i) {
+                    context.set(a.name, closureArgs[i]);
+                });
+                var ret;
+                body.forEach(function (d) {
+                    ret = context.evaluate(d);
+                });
+                return ret;
+            };
         }
     };
 
@@ -157,17 +164,6 @@ module.exports = (function () {
                 return expr.resolve(this);
             }
             throw new Error("Unmatched type " + (typeof expr) + " (" + expr.constructor.name + ")");
-        },
-
-        enterScope: function (name) {
-            this.scope.push(name);
-        },
-
-        exitScope: function (name) {
-            var popped = this.scope.pop();
-            if (popped !== name) {
-                throw new ScopeError("Invalid scope shift, expected to exit scope '" + name + "' but got '" + popped + "'");
-            }
         }
     };
 
@@ -177,6 +173,8 @@ module.exports = (function () {
 
     Container.prototype = {
         addPrelude: function(prelude) {
+            var vm = require('vm');
+
             vm.runInContext(
                 prelude,
                 vm.createContext({
@@ -213,6 +211,24 @@ module.exports = (function () {
     Identifier.prototype.resolve = function (context) {
         return context.evaluate(context.get(this.name));
     };
+
+    var Literal = function(value) {
+        this.value = value;
+    };
+    Literal.prototype = {
+        resolve: function(context) {
+            if (typeof this.value === 'object') {
+                var val = this.value;
+                var ret = {};
+                Object.keys(val).forEach(function(n) {
+                    ret[n]= val[n].resolve(context);
+                });
+                return ret;
+            }
+            return this.value;
+        }
+    };
+
 
     var TaskLine = function (elements) {
         this.elements = elements;
@@ -287,6 +303,7 @@ module.exports = (function () {
             }
             return ret;
         },
+        Literal: Literal,
         Closure: Closure,
         Definition: Definition,
         Decorator: Decorator,

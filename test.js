@@ -29,7 +29,8 @@ files.forEach(function (fileName) {
                 })
             );
         } catch(e) {
-            console.error("Error in test file " + resultFile, e);
+            console.error("Error in test file " + resultFile);
+            console.log(e.stack);
         }
         console.log("");
     }

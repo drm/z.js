@@ -1,6 +1,15 @@
 {
     z = require('../src/parser-util.js');
 
+    function create(node) {
+        node.debug = {
+            line: line(),
+            column: column(),
+            offset: offset()
+        };
+        return node;
+    }
+
     function decorate(decorators, object) {
         decorators.forEach(function(decorator) {
             object = new z.Decorator(decorator, object);
@@ -167,15 +176,19 @@ expr
         / '(' expr: expr ')' {
             return expr
         }
-        / string
-        / number
-        / boolean
-        / null
+        / literal:(
+            string
+            / number
+            / boolean
+            / null
+            / array_literal
+            / object_literal
+        ) {
+            return new z.Literal(literal);
+        }
         / i:identifier {
             return new z.Identifier(i);
         }
-        / array_literal
-        / object_literal
     ) s:subscript* {
         s.forEach(function(subscript) {
             subscript.setSubject(e);
@@ -196,14 +209,13 @@ invocation
 
 dot_member_access
     = '.' name:identifier {
-        return new z.MemberAccess(name);
+        return new z.MemberAccess(new z.Literal(name));
     }
 
 member_access
     = '[' e:expr ']' {
         return new z.MemberAccess(e);
     }
-
 
 array_literal
     = '[' _ list:expr_list? _ ']' {
