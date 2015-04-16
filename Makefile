@@ -3,7 +3,7 @@ PEGJS = node_modules/pegjs/bin/pegjs
 tests =
 
 clean:
-	rm lib/parser.js
+	rm -f lib/parser.js
 
 $(PEGJS):
 	npm install

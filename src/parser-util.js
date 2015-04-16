@@ -113,6 +113,28 @@ module.exports = (function () {
         this.right = right;
     };
 
+    BinOp.prototype = {
+        _precedence: ['*', '/', '+', '-'],
+
+        precedence: function() {
+            return this._precedence.indexOf(this.op);
+        },
+
+        resolve: function(context) {
+            var lhs = context.evaluate(this.left);
+            var rhs = context.evaluate(this.right);
+
+            switch (this.op) {
+                case '+': return lhs + rhs;
+                case '-': return lhs - rhs;
+                case '/': return lhs / rhs;
+                case '*': return lhs * rhs;
+            }
+
+            throw new Error("Invalid operator" + this.op);
+        }
+    };
+
     var UnOp = function (op, operand) {
         this.op = op;
         this.operand = operand;
@@ -218,11 +240,18 @@ module.exports = (function () {
     Literal.prototype = {
         resolve: function(context) {
             if (typeof this.value === 'object') {
-                var val = this.value;
-                var ret = {};
-                Object.keys(val).forEach(function(n) {
-                    ret[n]= val[n].resolve(context);
-                });
+                var ret, val = this.value;
+                if (val.constructor === Array) {
+                    ret = [];
+                    val.forEach(function(v, k) {
+                        ret[k]= v.resolve(context);
+                    });
+                } else {
+                    ret = {};
+                    Object.keys(val).forEach(function(n) {
+                        ret[n]= val[n].resolve(context);
+                    });
+                }
                 return ret;
             }
             return this.value;
@@ -316,6 +345,8 @@ module.exports = (function () {
 
         BinOp: BinOp,
         UnOp: UnOp,
+
+        Context: Context,
 
         renderSyntaxError: renderSyntaxError
     }

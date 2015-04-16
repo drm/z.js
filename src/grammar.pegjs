@@ -158,7 +158,9 @@ arg
     }
 
 arg_default
-    = _ '=' _ expr:expr                                          { return expr; }
+    = _ '=' _ expr:expr {
+        return expr;
+    }
 
 identifier
     = f:[a-z_-]i tail:[a-z0-9_-]i* {
@@ -166,35 +168,63 @@ identifier
     }
 
 expr
-    = e:(
-        '(' args:arglist? ')' ws '=>' ws expr:expr {
-            return new z.Closure(
-                args,
-                [expr]
-            );
+    = lhs:(
+        e:(
+            '(' args:arglist? ')' ws '=>' ws expr:expr {
+                return new z.Closure(
+                    args,
+                    [expr]
+                );
+            }
+            / '(' expr: expr ')' {
+                return expr
+            }
+            / literal:(
+                string
+                / number
+                / boolean
+                / null
+                / array_literal
+                / object_literal
+            ) {
+                return new z.Literal(literal);
+            }
+            / i:identifier {
+                return new z.Identifier(i);
+            }
+        ) s:subscript* {
+            s.forEach(function(subscript) {
+                subscript.setSubject(e);
+                e = subscript;
+            });
+            return e;
         }
-        / '(' expr: expr ')' {
-            return expr
+    ) op:(
+        _ op:BINARY_OP _ e:expr {
+            return [op, e];
         }
-        / literal:(
-            string
-            / number
-            / boolean
-            / null
-            / array_literal
-            / object_literal
-        ) {
-            return new z.Literal(literal);
+    )? {
+        if (op) {
+            var ret = new z.BinOp(
+                  op[0],
+                  lhs,
+                  op[1]
+              );
+
+            if (typeof ret.right.op !== 'undefined' && ret.right.precedence() > ret.precedence()) {
+                ret = new z.BinOp(
+                    ret.right.op,
+                    new z.BinOp(
+                        ret.op,
+                        ret.left,
+                        ret.right.left
+                    ),
+                    ret.right.right
+                );
+            }
+            return ret;
         }
-        / i:identifier {
-            return new z.Identifier(i);
-        }
-    ) s:subscript* {
-        s.forEach(function(subscript) {
-            subscript.setSubject(e);
-            e = subscript;
-        });
-        return e;
+        return lhs;
     }
 
 subscript
@@ -347,6 +377,8 @@ __ = [ \t\r\n]+
 
 // mandatory whitespace without newlines
 indent = [ \t]+
+
+BINARY_OP = '+' / '-' / '*' / '/'
 
 // -------------------------------------------------------------------------------------------------------------------
 // Some helpful definitions
