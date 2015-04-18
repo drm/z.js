@@ -33,7 +33,9 @@ var values = {
     l: 'some_call return value(one,two)',
     m: 'a',
     q: [":)"],
-    r: ["\\o/", "\\o/", "\\o/"]
+    r: ["\\o/", "\\o/", "\\o/"],
+
+    q: 20
 };
 
 result.set('some_call', function() { return 'some_call return value(' + Array.prototype.slice.call(arguments).join(",") +  ')'; });
@@ -46,5 +48,7 @@ Object.keys(values).forEach(function(n) {
     assert.deepEqual(values[n], result.context.evaluate(result.context.get(n)));
 });
 
-
-
+matrix = result.context.evaluate(result.context.get('matrix'));
+matrix.forEach(function (v) {
+    assert.equal(v[0], v[1]);
+});

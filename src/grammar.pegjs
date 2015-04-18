@@ -167,64 +167,78 @@ identifier
         return f + tail.join("");
     }
 
-expr
-    = lhs:(
-        e:(
-            '(' args:arglist? ')' ws '=>' ws expr:expr {
-                return new z.Closure(
-                    args,
-                    [expr]
-                );
-            }
-            / '(' expr: expr ')' {
-                return expr
-            }
-            / literal:(
-                string
-                / number
-                / boolean
-                / null
-                / array_literal
-                / object_literal
-            ) {
-                return new z.Literal(literal);
-            }
-            / i:identifier {
-                return new z.Identifier(i);
-            }
-        ) s:subscript* {
-            s.forEach(function(subscript) {
-                subscript.setSubject(e);
-                e = subscript;
-            });
-            return e;
-        }
-    ) op:(
-        _ op:BINARY_OP _ e:expr {
-            return [op, e];
-        }
-    )? {
-        if (op) {
-            var ret = new z.BinOp(
-                  op[0],
-                  lhs,
-                  op[1]
-              );
 
-            if (typeof ret.right.op !== 'undefined' && ret.right.precedence() >= ret.precedence()) {
-                ret = new z.BinOp(
-                    ret.right.op,
-                    new z.BinOp(
-                        ret.op,
-                        ret.left,
-                        ret.right.left
-                    ),
-                    ret.right.right
-                );
-            }
-            return ret;
+_expr =         e:(
+                   '(' args:arglist? ')' ws '=>' ws expr:expr {
+                       return new z.Closure(
+                           args,
+                           [expr]
+                       );
+                   }
+                   / '(' expr: expr ')' {
+                       return expr
+                   }
+                   / literal:(
+                       string
+                       / number
+                       / boolean
+                       / null
+                       / array_literal
+                       / object_literal
+                   ) {
+                       return new z.Literal(literal);
+                   }
+                   / i:identifier {
+                       return new z.Identifier(i);
+                   }
+               ) s:subscript* {
+                   s.forEach(function(subscript) {
+                       subscript.setSubject(e);
+                       e = subscript;
+                   });
+                   return e;
+               }
+
+expr
+    = lhs:(_expr) op:(
+        _ op:BINARY_OP _ expr:_expr {
+            return {
+                op: op,
+                expr: expr
+            };
         }
-        return lhs;
+    )* {
+        var ret = lhs;
+        if (op) {
+            op.forEach(function(operation, i) {
+                if (i > 0 && typeof ret.op !== 'undefined') {
+                    if (z.precedence(ret.op) <= z.precedence(operation.op)) {
+                        ret = new z.BinOp(
+                            operation.op,
+                            ret,
+                            operation.expr
+                        );
+                    } else {
+                        ret = new z.BinOp(
+                            ret.op,
+                            ret.left,
+                            new z.BinOp(
+                                operation.op,
+                                ret.right,
+                                operation.expr
+                            )
+                        );
+                    }
+                } else {
+                    ret = new z.BinOp(
+                        operation.op,
+                        ret,
+                        operation.expr
+                    );
+                }
+            });
+        }
+        return ret;
     }
 
 subscript
@@ -356,7 +370,7 @@ inline_comment
     / multiline_comment
 
 single_line_comment
-    = ( '#' / '//' ) [^\n]+ EOL
+    = ( '#' / '//' ) [^\n]* EOL
 
 multiline_comment
     = '/*' ( !('*/') . )* '*/'

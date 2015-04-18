@@ -114,12 +114,6 @@ module.exports = (function () {
     };
 
     BinOp.prototype = {
-        _precedence: ['*', '/', '+', '-'],
-
-        precedence: function() {
-            return this._precedence.indexOf(this.op);
-        },
-
         resolve: function(context) {
             var lhs = context.evaluate(this.left);
             var rhs = context.evaluate(this.right);
@@ -313,8 +307,13 @@ module.exports = (function () {
         return ret;
     };
 
+    var precedence = ['*', '/', '+', '-'];
 
     return {
+        precedence: function(op) {
+            return precedence.indexOf(op);
+        },
+
         parseFile: function (file) {
             var parser = require('../lib/parser.js'),
                 fs = require('fs'),
