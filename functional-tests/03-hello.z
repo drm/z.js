@@ -3,6 +3,6 @@ container.set('what', "Hello");
 container.set('whom', "World");
 }}
 
-say(what, whom):
+say():
     echo $(what) $(whom)
 

@@ -1,14 +1,13 @@
 module.exports = (function () {
+    var util = require('util');
+
     var Definition = function (name, body) {
         this.name = name;
         this.expr = body;
     };
     Definition.prototype = {
         resolve: function (context) {
-            if (typeof this.expr === 'object') {
-                return this.expr.resolve(context);
-            }
-            return this.expr;
+            return this.expr.resolve(context);
         }
     };
 
@@ -62,7 +61,7 @@ module.exports = (function () {
 
         resolve: function(context) {
             var target = this.expr.resolve(context);
-            return target.call(context, this.args.map(function(a) {
+            return target.apply(context, this.args.map(function(a) {
                 return context.evaluate(a);
             }));
         }
@@ -93,10 +92,16 @@ module.exports = (function () {
         resolve: function (context) {
             var body = this.body;
             var argSpec = this.args;
-            return function(args) {
-                var closureArgs = args;
+            return function() {
+                var closureArgs = arguments;
                 argSpec.forEach(function (a, i) {
-                    context.set(a.name, closureArgs[i]);
+                    if (typeof closureArgs[i] !== 'undefined') {
+                        context.set(a.name, closureArgs[i]);
+                    } else if (a.default_value) {
+                        context.set(a.name, context.evaluate(a.default_value));
+                    } else {
+                        throw new Error("Missing argument " + i);
+                    }
                 });
                 var ret;
                 body.forEach(function (d) {
@@ -123,9 +128,11 @@ module.exports = (function () {
                 case '-': return lhs - rhs;
                 case '/': return lhs / rhs;
                 case '*': return lhs * rhs;
+                case '&&': return lhs && rhs;
+                case '||': return lhs || rhs;
             }
 
-            throw new Error("Invalid operator" + this.op);
+            throw new Error("Invalid operator '" + this.op + "'");
         }
     };
 
@@ -133,6 +140,17 @@ module.exports = (function () {
         this.op = op;
         this.operand = operand;
     };
+    UnOp.prototype = {
+        resolve: function (context) {
+            var operand = context.evaluate(this.operand);
+
+            switch (this.op) {
+                case '!': return !operand;
+                case '-': return -operand;
+            }
+            throw new Error("Invalid operator '" + this.op + "'");
+        }
+    }
 
     var Arg = function (name, default_value) {
         this.name = name;
@@ -170,14 +188,18 @@ module.exports = (function () {
                 case typeof expr === 'string':
                 case typeof expr === 'number':
                 case typeof expr === 'boolean':
-                case typeof expr === 'null':
+                case expr === null:
                 case typeof expr === 'function':
                     return expr;
                 case typeof expr == 'undefined':
                     throw new Error("Cannot resolve undefined value");
             }
             if (typeof expr.resolve === 'function') {
-                return expr.resolve(this);
+                try {
+                    return expr.resolve(this);
+                } catch (e) {
+                    throw new Error("Resolution error trying to resolve expression " + util.inspect(expr, 1) + " at line " + expr.debug.line + " (" + e + ")");
+                }
             }
             throw new Error("Unmatched type " + (typeof expr) + " (" + expr.constructor.name + ")");
         }
@@ -277,23 +299,8 @@ module.exports = (function () {
         }
     };
 
-    var TaskSection = function (name, lines) {
-        this.name = name;
-        this.lines = lines;
-    };
-
-    TaskSection.prototype = {
-        resolve: function (context) {
-            this.lines.forEach(function (l) {
-                l.resolve(context);
-            });
-        }
-    };
-
-    var renderSyntaxError = function (fileName, contents, e) {
-        var ret = '';
-        ret += 'Syntax error in ' + fileName + ' at line ' + e.line + "\n";
-        ret += "\n";
+    var renderDebugInfo = function(fileName, contents, e) {
+        ret = '';
         ret += "    " + fileName + ":" + "\n";
         ret += '    ----------------------------------------' + "\n";
         if (e.line > 1) {
@@ -303,6 +310,16 @@ module.exports = (function () {
         ret += '    ' + new Array(e.column + 3).join(" ") + '^-- here' + "\n";
         ret += '    ----------------------------------------' + "\n";
         ret += "" + "\n";
+
+        return ret;
+    };
+
+    var renderSyntaxError = function (fileName, contents, e) {
+        var ret = '';
+        ret += 'Syntax error in ' + fileName + ' at line ' + e.line + "\n";
+        ret += "\n";
+
+        ret += renderDebugInfo(fileName, contents, e);
         ret += e.message + "\n";
         return ret;
     };
@@ -314,15 +331,16 @@ module.exports = (function () {
             return precedence.indexOf(op);
         },
 
-        parseFile: function (file) {
+        parseFile: function (file, options) {
             var parser = require('../lib/parser.js'),
                 fs = require('fs'),
                 ret,
-                fileContents = fs.readFileSync(file, 'utf-8')
+                fileContents = fs.readFileSync(file, 'utf-8'),
+                options = options || {}
                 ;
 
             try {
-                ret = parser.parse(fileContents);
+                ret = parser.parse(fileContents, options);
             } catch (e) {
                 if (e.constructor === parser.SyntaxError) {
                     console.log(renderSyntaxError(file, fileContents, e));
@@ -347,6 +365,7 @@ module.exports = (function () {
 
         Context: Context,
 
-        renderSyntaxError: renderSyntaxError
+        renderSyntaxError: renderSyntaxError,
+        renderDebugInfo: renderDebugInfo
     }
 })();

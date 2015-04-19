@@ -1,6 +1,8 @@
+// regular globals
+
 what = "Hello"
 whom = "World"
 
-say(what, whom):
+say():
     echo $(what) $(whom)
 

@@ -21,14 +21,4 @@ parser_test: lib/parser.js parser-tests/* test.js
 	node test.js $(tests)
 
 functional_test: lib/parser.js functional-tests/*
-	node src/main.js functional-tests/00-hello.z say
-	node src/main.js functional-tests/01-hello.z say
-	node src/main.js functional-tests/02-hello.z say
-	node src/main.js functional-tests/03-hello.z say
-	node src/main.js functional-tests/04-hello.z say
-	node src/main.js functional-tests/05-hello.z say
-	node src/main.js functional-tests/06-hello.z say
-	node src/main.js functional-tests/07-hello.z say
-	node src/main.js functional-tests/08-hello.z say
-	node src/main.js functional-tests/09-hello.z say
-
+	for f in functional-tests/*; do node src/main.js $$f say; done;

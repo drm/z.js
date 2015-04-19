@@ -7,6 +7,6 @@
 }}
 
 @decorated
-say(what, whom):
+say():
     echo $(what) $(whom)
 

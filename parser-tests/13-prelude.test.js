@@ -1,1 +1,1 @@
-console.log(result.get('var'));
+assert.equal(result.get('var'), "Hello world");

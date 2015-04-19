@@ -1,0 +1,10 @@
+get_whom = () => "World"
+get_what = () => "Hello"
+
+
+// lazy closure evaluation locally defined
+
+say(what = get_what, whom = get_whom):
+    echo $(what) $(whom)
+
+

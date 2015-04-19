@@ -15,7 +15,7 @@ if (process.argv.length > 2) {
 files.forEach(function (fileName) {
     if (fileName.match(/\.z$/)) {
         console.log("Parsing " + fileName);
-        var result = z.parseFile(path.join('parser-tests', fileName));
+        var result = z.parseFile(path.join('parser-tests', fileName), {nodebug: true});
         var resultFile = fileName.replace(/\.z/, '.test.js');
         var test = path.join('parser-tests', resultFile);
         try {

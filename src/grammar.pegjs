@@ -2,6 +2,9 @@
     z = require('../src/parser-util.js');
 
     function create(node) {
+        if (options.nodebug) {
+            return node;
+        }
         node.debug = {
             line: line(),
             column: column(),
@@ -12,7 +15,7 @@
 
     function decorate(decorators, object) {
         decorators.forEach(function(decorator) {
-            object = new z.Decorator(decorator, object);
+            object = create(new z.Decorator(decorator, object));
         });
         return object;
     }
@@ -70,13 +73,13 @@ task
     = decorators:decorator*
       name:identifier ws args:arguments? ws ':' ws EOL
       lines:task_line* _ {
-        return new z.Definition(
+        return create(new z.Definition(
             name,
             decorate(
                 decorators,
-                new z.Closure(args || [], lines)
+                create(new z.Closure(args || [], lines))
             )
-        );
+        ));
     }
 
 decorator
@@ -91,10 +94,10 @@ ch
 
 task_line
     = indent '@' i:identifier EOL {
-        return new z.Identifier(i);
+        return create(new z.Identifier(i));
     }
     / indent data:line EOL {
-        return new z.TaskLine(data);
+        return create(new z.TaskLine(data));
     }
 
 cdata
@@ -126,14 +129,14 @@ line
 // -------------------------------------------------------------------------------------------------------------------
 definition
     = i:identifier _ '=' _ e:expr _ {
-        return new z.Definition(i, e);
+        return create(new z.Definition(i, e));
     }
 
 deplist = dep*
 
 dep
     = ws i:identifier ws {
-        return new z.Identifier(i);
+        return create(new z.Identifier(i));
     }
 
 arguments
@@ -154,7 +157,7 @@ nextarg
 
 arg
     = i:identifier d:arg_default? {
-        return new z.Arg(i, d);
+        return create(new z.Arg(i, d));
     }
 
 arg_default
@@ -162,42 +165,49 @@ arg_default
         return expr;
     }
 
-identifier
+identifier "Identifier"
     = f:[a-z_-]i tail:[a-z0-9_-]i* {
         return f + tail.join("");
     }
 
 
-_expr =         e:(
-                   '(' args:arglist? ')' ws '=>' ws expr:expr {
-                       return new z.Closure(
-                           args,
-                           [expr]
-                       );
-                   }
-                   / '(' expr: expr ')' {
-                       return expr
-                   }
-                   / literal:(
-                       string
-                       / number
-                       / boolean
-                       / null
-                       / array_literal
-                       / object_literal
-                   ) {
-                       return new z.Literal(literal);
-                   }
-                   / i:identifier {
-                       return new z.Identifier(i);
-                   }
-               ) s:subscript* {
-                   s.forEach(function(subscript) {
-                       subscript.setSubject(e);
-                       e = subscript;
-                   });
-                   return e;
-               }
+_expr
+    =   op: UNARY_OP*
+        e:(
+            '(' args:arglist? ')' ws '=>' ws expr:expr {
+                return create(new z.Closure(
+                    args,
+                    [expr]
+                    ));
+                }
+            / '(' expr: expr ')' {
+               return expr
+            }
+            / literal:(
+                string
+                / number
+                / boolean
+                / null
+                / array_literal
+                / object_literal
+            ) {
+                return create(new z.Literal(literal));
+            }
+            / i:identifier {
+                return create(new z.Identifier(i));
+            }
+        ) s:subscript* {
+            s.forEach(function(subscript) {
+                subscript.setSubject(e);
+                e = subscript;
+            });
+            if (op.length) {
+                op.reverse().forEach(function(op) {
+                    e = create(new z.UnOp(op, e));
+                });
+            }
+            return e;
+        }
 
 expr
     = lhs:(_expr) op:(
@@ -213,28 +223,28 @@ expr
             op.forEach(function(operation, i) {
                 if (i > 0 && typeof ret.op !== 'undefined') {
                     if (z.precedence(ret.op) <= z.precedence(operation.op)) {
-                        ret = new z.BinOp(
+                        ret = create(new z.BinOp(
                             operation.op,
                             ret,
                             operation.expr
-                        );
+                        ));
                     } else {
-                        ret = new z.BinOp(
+                        ret = create(new z.BinOp(
                             ret.op,
                             ret.left,
-                            new z.BinOp(
+                            create(new z.BinOp(
                                 operation.op,
                                 ret.right,
                                 operation.expr
-                            )
-                        );
+                            ))
+                        ));
                     }
                 } else {
-                    ret = new z.BinOp(
+                    ret = create(new z.BinOp(
                         operation.op,
                         ret,
                         operation.expr
-                    );
+                    ));
                 }
             });
         }
@@ -248,17 +258,17 @@ subscript
 
 invocation
     =  '(' args:expr_list? ')' {
-        return new z.Invocation(args);
+        return create(new z.Invocation(args));
     }
 
 dot_member_access
     = '.' name:identifier {
-        return new z.MemberAccess(new z.Literal(name));
+        return create(new z.MemberAccess(new z.Literal(name)));
     }
 
 member_access
     = '[' e:expr ']' {
-        return new z.MemberAccess(e);
+        return create(new z.MemberAccess(e));
     }
 
 array_literal
@@ -266,7 +276,7 @@ array_literal
         return list || [];
     }
 
-object_literal
+object_literal "Object"
     = '{' _ list:object_member_list? _ '}' {
         var o = {};
         if (list) {
@@ -301,7 +311,7 @@ expr_list
     }
 
 
-string
+string "String"
     = double_quoted_string
     / single_quoted_string
 
@@ -337,7 +347,7 @@ single_quoted_char
     { return sequence; }
   / $ [^']+
 
-number
+number "Number"
     = float
     / integer
 
@@ -357,7 +367,7 @@ null
 // -------------------------------------------------------------------------------------------------------------------
 // Comments
 // -------------------------------------------------------------------------------------------------------------------
-comment
+comment "Comment"
     = (
         single_line_comment
     /   multiline_comment
@@ -381,10 +391,12 @@ multiline_comment
 // -------------------------------------------------------------------------------------------------------------------
 
 // any optional whitespace
-_  = [ \t\r\n]*
+_  "whitespace"
+    = [ \t\r\n]*
 
 // optional whitespace without newlines
-ws = [ \t]*
+ws "whitespace"
+    = [ \t]*
 
 // mandatory whitespace
 __ = [ \t\r\n]+
@@ -392,7 +404,12 @@ __ = [ \t\r\n]+
 // mandatory whitespace without newlines
 indent = [ \t]+
 
-BINARY_OP = '+' / '-' / '*' / '/'
+
+BINARY_OP "Binary operator"
+    = '+' / '-' / '*' / '/' / '&&' / '||'
+
+UNARY_OP
+    = '!' / '+' / '-'
 
 // -------------------------------------------------------------------------------------------------------------------
 // Some helpful definitions

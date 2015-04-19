@@ -1,3 +1,4 @@
 {{
     container.set('var', 'Hello world');
 }}
+
