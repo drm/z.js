@@ -5,10 +5,10 @@ audience = () => "World"
 dep:
     echo "Welcome!"
 
-@depends('dep')
-@triggers('trigger')
+@depends(&dep)
+@triggers(&trigger)
 say(what = "Hello", whom = audience):
     echo $(what) $(whom)
 
 trigger:
-    echo "Bye! $(whom)"
+    echo "Bye $(whom)!"

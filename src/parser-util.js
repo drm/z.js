@@ -142,6 +142,10 @@ module.exports = (function () {
     };
     UnOp.prototype = {
         resolve: function (context) {
+            if (this.op == '&') {
+                return this.operand;
+            }
+
             var operand = context.evaluate(this.operand);
 
             switch (this.op) {
@@ -219,9 +223,8 @@ module.exports = (function () {
 
                     object.resolve = function(context) {
                         return function() {
-                            var d = container.get(task);
-                            ret = original.call(object, context).apply(object, arguments);
-                            d.resolve(context).apply(d, arguments);
+                            var ret = original.call(object, context).apply(object, arguments);
+                            task.resolve(context).apply(task, arguments);
                             return ret;
                         }
                     };
@@ -235,8 +238,7 @@ module.exports = (function () {
 
                     object.resolve = function(context) {
                         return function()  {
-                            var d = container.get(task);
-                            d.resolve(context).apply(this, arguments);
+                            task.resolve(context).apply(this, arguments);
                             return original.call(object, context).apply(this, arguments);
                         }
                     };
