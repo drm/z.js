@@ -210,6 +210,42 @@ module.exports = (function () {
     };
 
     Container.prototype = {
+        defaults: function() {
+            var container = this;
+
+            this.set('triggers', function(task) {
+                return function(object) {
+                    var original = object.resolve;
+
+                    object.resolve = function(context) {
+                        return function() {
+                            var d = container.get(task);
+                            ret = original.call(object, context).apply(object, arguments);
+                            d.resolve(context).apply(d, arguments);
+                            return ret;
+                        }
+                    };
+
+                    return object;
+                }
+            });
+            this.set('depends', function(task) {
+                return function(object) {
+                    var original = object.resolve;
+
+                    object.resolve = function(context) {
+                        return function()  {
+                            var d = container.get(task);
+                            d.resolve(context).apply(this, arguments);
+                            return original.call(object, context).apply(this, arguments);
+                        }
+                    };
+
+                    return object;
+                }
+            });
+        },
+
         addPrelude: function(prelude) {
             var vm = require('vm');
 

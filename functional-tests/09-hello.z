@@ -1,36 +1,5 @@
-{{
-    container.set('triggers', function(task) {
-        return function(object) {
-            var original = object.resolve;
+{{ container.defaults(); }}
 
-            object.resolve = function(context) {
-                return function() {
-                    var d = container.get(task);
-                    ret = original.call(object, context).apply(object, arguments);
-                    d.resolve(context).apply(d, arguments);
-                    return ret;
-                }
-            };
-
-            return object;
-        }
-    });
-    container.set('depends', function(task) {
-        return function(object) {
-            var original = object.resolve;
-
-            object.resolve = function(context) {
-                return function()  {
-                    var d = container.get(task);
-                    d.resolve(context).apply(this, arguments);
-                    return original.call(object, context).apply(this, arguments);
-                }
-            };
-
-            return object;
-        }
-    });
-}}
 audience = () => "World"
 
 dep:
