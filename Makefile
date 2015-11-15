@@ -9,26 +9,21 @@ clean:
 $(PEGJS):
 	npm install
 
-try:
-	$(PEGJS) src/test.pegjs lib/test.js
-	node tmp.js
-
 lib:
 	mkdir -p lib
 
-lib/parser-util.js: lib src/parser-util.js
-	$(BABEL) src/parser-util.js -o lib/parser-util.js
+lib/%.js: src/%.js
+	$(BABEL) -o $@ $<
 
-lib/main.js: lib src/main.js
-	$(BABEL) src/main.js -o lib/main.js
+build: lib/parser-util.js lib/defaults.js lib/main.js lib/parser.js
 
 lib/parser.js: $(PEGJS) lib src/grammar.pegjs lib/parser-util.js
 	$(PEGJS) src/grammar.pegjs lib/parser.js
 
 test: parser_test functional_test
 
-parser_test: lib/parser.js parser-tests/* test.js
+parser_test: build parser-tests/* test.js
 	node test.js $(tests)
 
-functional_test: lib/parser.js lib/main.js functional-tests/*
+functional_test: build functional-tests/*
 	for f in functional-tests/*; do node lib/main.js $$f say; done;

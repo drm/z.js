@@ -6,8 +6,7 @@ a custom expression grammar, the limitations of that language and the seemingly 
 on the tool, triggered a rewrite in JavaScript.
 
 ## Future ##
-The general idea is to publish the tool under terms of an MIT-style license and integrate with other tools such as
-grunt and gulp.
+The general idea is to publish the tool under terms of an MIT-style license.
 
 ## What does Z do? ##
 Z is an orchestration tool, closely integrated with your shell. This resembles GNU Make the most. The main difference
@@ -18,4 +17,3 @@ to debug and adapt to different build systems.
 ## How to get started? ##
 Z will be published to npm as soon as the first version will reach alpha state. Wondering how you can help? Please
 contact the author.
-
