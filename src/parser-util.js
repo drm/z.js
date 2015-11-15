@@ -211,6 +211,7 @@ module.exports = (function () {
 
     var Container = function () {
         this.context = new Context();
+        this.set('SHELL', ['/bin/bash', ['-e']]);
     };
 
     Container.prototype = {
@@ -328,7 +329,8 @@ module.exports = (function () {
             });
 
             var child_process = require('child_process');
-            var s = child_process.spawn('/bin/bash', ['-e']);
+
+            var s = child_process.spawn.apply(null, context.get('SHELL'));
             s.stdout.on('data', function (data) {
                 process.stdout.write(data);
             });
@@ -338,7 +340,7 @@ module.exports = (function () {
     };
 
     var renderDebugInfo = function(fileName, contents, e) {
-        ret = '';
+        var ret = '';
         ret += "    " + fileName + ":" + "\n";
         ret += '    ----------------------------------------' + "\n";
         if (e.line > 1) {

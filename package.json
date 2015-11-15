@@ -8,8 +8,9 @@
   "author": "Gerard van Helden <drm@melp.nl>",
   "license": "MIT",
   "dependencies": {
+    "assert-diff": "^1.0.1",
+    "asty": "*",
     "pegjs": "*",
-    "pegjs-util": "*",
-    "asty": "*"
+    "pegjs-util": "*"
   }
 }

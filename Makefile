@@ -13,6 +13,7 @@ try:
 	node tmp.js
 
 lib/parser.js: $(PEGJS) src/grammar.pegjs src/parser-util.js
+	mkdir -p lib
 	$(PEGJS) src/grammar.pegjs lib/parser.js
 
 test: parser_test functional_test

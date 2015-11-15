@@ -11,5 +11,3 @@
 
 say(what = get_what, whom = get_whom):
     echo $(what) $(whom)
-
-
