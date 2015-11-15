@@ -2,7 +2,7 @@ var assert = require('assert-diff');
 var fs = require('fs');
 var vm = require('vm');
 var path = require('path');
-var z = require('./src/parser-util.js');
+var z = require('./lib/parser-util.js');
 var parser = require('./lib/parser.js');
 
 var files;

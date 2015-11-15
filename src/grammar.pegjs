@@ -1,11 +1,11 @@
 {
-    var z = require('../src/parser-util.js');
+    var z = require('./parser-util.js');
 
     function create(node) {
         if (options.nodebug) {
             return node;
         }
-        node.debug = location;
+        node.debug = location();
         return node;
     }
 

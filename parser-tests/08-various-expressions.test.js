@@ -18,20 +18,20 @@ var syntax = {
 };
 
 var values = {
-    //a: true,
-    //b: false,
-    //c: 1234,
-    //d: 1234.56789,
-    //e: "this is a string",
-    //f: "This is another string containing\n" +
-    //"    newlines",
-    ////g: 'value of identifier',
-    //h: [1, 'b', "foo", []],
-    //i: {a: "b", c: ["d", "e", "f"], d: [], e:{}},
-    //j: 'some_call return value()',
-    //k: 'some_call return value(one)',
-    //l: 'some_call return value(one,two)',
-    //m: 'a',
+    a: true,
+    b: false,
+    c: 1234,
+    d: 1234.56789,
+    e: "this is a string",
+    f: "This is another string containing\n" +
+    "    newlines",
+    g: 'value of identifier',
+    h: [1, 'b', "foo", []],
+    i: {a: "b", c: ["d", "e", "f"], d: [], e:{}},
+    j: 'some_call return value()',
+    k: 'some_call return value(one)',
+    l: 'some_call return value(one,two)',
+    m: 'a',
     q: [":)"],
     r: ["\\o/", "\\o/", "\\o/"],
 
@@ -45,6 +45,7 @@ Object.keys(syntax).forEach(function(n) {
 });
 
 Object.keys(values).forEach(function(n) {
+    console.log(n);
     assert.deepEqual(values[n], result.context.evaluate(result.context.get(n)));
 });
 

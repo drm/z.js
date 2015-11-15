@@ -1,7 +1,7 @@
 my_object = {
     my_function: (a) => [a, a, a]
 }
-
+identifier = "value of identifier"
 a = true
 b = false
 c = 1234

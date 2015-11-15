@@ -10,6 +10,7 @@
   "dependencies": {
     "assert-diff": "^1.0.1",
     "asty": "*",
+    "babel": "^5.8.34",
     "pegjs": "*",
     "pegjs-util": "*"
   }
