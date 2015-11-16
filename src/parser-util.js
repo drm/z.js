@@ -272,7 +272,7 @@ class TaskLine {
     }
 
     resolve(context) {
-        this.elements = this.elements.map(function (e) {
+        this.elements = this.elements.map((e) => {
             var ret = context.evaluate(e);
             if (typeof ret === 'function') {
                 ret = ret.call();
@@ -280,11 +280,9 @@ class TaskLine {
             return ret;
         })
 
-        var child_process = require('child_process');
-        var s = child_process.spawn.apply(null, context.get('SHELL'));
-        s.stdout.on('data', function (data) {
-            process.stdout.write(data);
-        });
+        let child_process = require('child_process');
+        let s = child_process.spawn.apply(null, context.get('SHELL'));
+        s.stdout.on('data', (data) => process.stdout.write(data));
         s.stdin.write(this.elements.join(""));
         s.stdin.end();
     }
