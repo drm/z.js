@@ -272,13 +272,7 @@ class TaskLine {
     }
 
     resolve(context) {
-        this.elements = this.elements.map((e) => {
-            var ret = context.evaluate(e);
-            if (typeof ret === 'function') {
-                ret = ret.call();
-            }
-            return ret;
-        })
+        this.elements = this.elements.map((e) => context.evaluate(e, true));
 
         let child_process = require('child_process');
         let s = child_process.spawn.apply(null, context.get('SHELL'));
@@ -290,13 +284,14 @@ class TaskLine {
 
 function renderDebugInfo(fileName, contents, e) {
     var ret = '';
+
     ret += "    " + fileName + ":" + "\n";
     ret += '    ----------------------------------------' + "\n";
-    if (e.line > 1) {
-        ret += '    ' + (e.line - 1) + '. ' + contents.split("\n")[e.line - 2] + "\n";
+    if (e.location.start.line > 1) {
+        ret += '    ' + (e.location.start.line - 1) + '. ' + contents.split("\n")[e.location.start.line - 2] + "\n";
     }
-    ret += '    ' + e.line + '. ' + contents.split("\n")[e.line - 1] + "\n";
-    ret += '    ' + new Array(e.column + 3).join(" ") + '^-- here' + "\n";
+    ret += '    ' + e.location.start.line + '. ' + contents.split("\n")[e.location.start.line - 1] + "\n";
+    ret += '    ' + new Array(e.location.start.column + 3).join(" ") + '^-- here' + "\n";
     ret += '    ----------------------------------------' + "\n";
     ret += "" + "\n";
 
@@ -304,8 +299,9 @@ function renderDebugInfo(fileName, contents, e) {
 }
 
 function renderSyntaxError(fileName, contents, e) {
+
     var ret = '';
-    ret += 'Syntax error in ' + fileName + ' at line ' + e.line + "\n";
+    ret += 'Syntax error in ' + fileName + ' at line ' + e.location.start.line + "\n";
     ret += "\n";
 
     ret += renderDebugInfo(fileName, contents, e);

@@ -6,6 +6,7 @@
             return node;
         }
         node.debug = location();
+        node.debug.file
         return node;
     }
 
@@ -402,7 +403,7 @@ indent = [ \t]+
 
 
 BINARY_OP "Binary operator"
-    = '+' / '-' / '*' / '/' / '&&' / '||'
+    = '+' / '-' / '*' / '/' / '&&' / '||' / '=='
 
 UNARY_OP
     = '!' / '+' / '-' / '&'
