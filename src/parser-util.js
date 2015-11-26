@@ -201,6 +201,13 @@ class Container {
     constructor() {
         this.context = new Context();
         this.set('SHELL', ['/bin/bash', ['-e']]);
+        this.set('RUNNER', (elements) => {
+            let child_process = require('child_process');
+            let s = child_process.spawn.apply(null, this.get('SHELL'));
+            s.stdout.on('data', (data) => process.stdout.write(data));
+            s.stdin.write(elements.join("") + "\n");
+            s.stdin.end();
+        });
     }
 
     defaults() {
@@ -281,12 +288,8 @@ class TaskLine {
 
     resolve(context) {
         this.elements = this.elements.map((e) => context.evaluate(e, true));
-
-        let child_process = require('child_process');
-        let s = child_process.spawn.apply(null, context.get('SHELL'));
-        s.stdout.on('data', (data) => process.stdout.write(data));
-        s.stdin.write(this.elements.join("") + "\n");
-        s.stdin.end();
+        
+        context.get('RUNNER')(this.elements);
     }
 }
 
