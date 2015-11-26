@@ -8,7 +8,7 @@ var argv = minimist(process.argv.slice(2));
 var container = z.parseFile(argv['_'][0]);
 
 if (typeof argv['explain'] !== 'undefined' && argv['explain']) {
-    container.set('SHELL', '/dev/stdout');
+    container.set('SHELL', ['/bin/bash', ['-c', 'cat']]);
 }
 
 if (process.argv[3]) {

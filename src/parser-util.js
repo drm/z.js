@@ -285,7 +285,7 @@ class TaskLine {
         let child_process = require('child_process');
         let s = child_process.spawn.apply(null, context.get('SHELL'));
         s.stdout.on('data', (data) => process.stdout.write(data));
-        s.stdin.write(this.elements.join(""));
+        s.stdin.write(this.elements.join("") + "\n");
         s.stdin.end();
     }
 }
