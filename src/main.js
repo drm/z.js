@@ -11,14 +11,20 @@ if (typeof argv['explain'] !== 'undefined' && argv['explain']) {
     container.set('SHELL', ['/bin/bash', ['-c', 'cat']]);
 }
 
+container.defaults();
+
 if (process.argv[3]) {
     var closure = container.getContext().require(argv['_'][1]);
     try {
         closure.resolve(container.context).apply(null, argv['_'].slice(2));
     } catch (e) {
-        console.log(e.message);
-        console.log("Trace:");
-        e.stacktrace.forEach((e) => console.log(z.renderDebugInfo(e)));
+        if (e.stacktrace) {
+            console.log(e.message);
+            console.log("Trace:");
+            e.stacktrace.forEach((e) => console.log(z.renderDebugInfo(e)));
+        } else {
+            console.log(e);
+        }
     }
 } else {
     console.log("TODO: render help");
