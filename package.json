@@ -11,6 +11,7 @@
     "assert-diff": "^1.0.1",
     "asty": "*",
     "babel": "^5.8.34",
+    "minimist": "^1.2.0",
     "pegjs": "*",
     "pegjs-util": "*"
   }

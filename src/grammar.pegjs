@@ -6,7 +6,8 @@
             return node;
         }
         node.debug = location();
-        node.debug.file
+        node.debug.file = options.file;
+        node.debug.src = options.src;
         return node;
     }
 

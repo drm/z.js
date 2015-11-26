@@ -159,6 +159,13 @@ class Context {
         return this.environment[a];
     }
 
+    require(a) {
+        if (!this.exists(a)) {
+            throw new Error("Undefined value " + a);
+        }
+        return this.get(a);
+    }
+
     exists(a) {
         return typeof this.environment[a] !== 'undefined';
     }
@@ -177,12 +184,13 @@ class Context {
         if (typeof expr.resolve === 'function') {
            try {
                 return expr.resolve(this);
-           } catch (e) {
-               throw new Error(
-                   "Resolution error `" + e + "` while resolve expression " + util.inspect(expr, 1) +
-                   (expr.debug ? " at line " + expr.debug.start.line : "") +
-                   " (" + e + ")"
-               );
+            } catch (e) {
+                if (typeof e.stacktrace === 'undefined') {
+                    e.stacktrace = [];
+                }
+                expr.debug.message = "Resolving " + expr.constructor.name;
+                e.stacktrace.push(expr.debug);
+                throw e;
            }
         }
         throw new Error("Unmatched type " + (typeof expr) + " (" + expr.constructor.name + ")");
@@ -282,29 +290,29 @@ class TaskLine {
     }
 }
 
-function renderDebugInfo(fileName, contents, e) {
+function renderDebugInfo(e) {
     var ret = '';
 
-    ret += "    " + fileName + ":" + "\n";
+    ret += "    " + e.file + ":" + (e.message ? " (" + e.message + ")" : "") + "\n";
     ret += '    ----------------------------------------' + "\n";
-    if (e.location.start.line > 1) {
-        ret += '    ' + (e.location.start.line - 1) + '. ' + contents.split("\n")[e.location.start.line - 2] + "\n";
+    if (e.start.line > 1) {
+        ret += '    ' + (e.start.line - 1) + '. ' + e.src.split("\n")[e.start.line - 2] + "\n";
     }
-    ret += '    ' + e.location.start.line + '. ' + contents.split("\n")[e.location.start.line - 1] + "\n";
-    ret += '    ' + new Array(e.location.start.column + 3).join(" ") + '^-- here' + "\n";
+    ret += '    ' + e.start.line + '. ' + e.src.split("\n")[e.start.line - 1] + "\n";
+    ret += '    ' + new Array(e.start.column + 3).join(" ") + '^-- here' + "\n";
     ret += '    ----------------------------------------' + "\n";
     ret += "" + "\n";
 
     return ret;
 }
 
-function renderSyntaxError(fileName, contents, e) {
+function renderSyntaxError(e) {
 
     var ret = '';
-    ret += 'Syntax error in ' + fileName + ' at line ' + e.location.start.line + "\n";
+    ret += 'Syntax error in ' + e.file + ' at line ' + e.start.line + "\n";
     ret += "\n";
 
-    ret += renderDebugInfo(fileName, contents, e);
+    ret += renderDebugInfo(e);
     ret += e.message + "\n";
     return ret;
 }
@@ -321,11 +329,16 @@ function parseFile(file, options) {
         options = options || {}
         ;
 
+    options.file = file;
+    options.src = fileContents;
+
     try {
         ret = parser.parse(fileContents, options);
     } catch (e) {
         if (e.constructor === parser.SyntaxError) {
-            console.log(renderSyntaxError(file, fileContents, e));
+            e.file = file;
+            e.src = fileContents;
+            console.log(renderSyntaxError(e));
         }
         throw e;
     }
